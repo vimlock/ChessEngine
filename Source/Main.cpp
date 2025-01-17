@@ -15,11 +15,10 @@ int main(int argc, const char *argv[])
 
 	std::cout << std::endl;
 
-	// board.setStandardPosition();
-	board.setSquare(B2, WHITE, KING);
+	board.setStandardPosition();
 
 	MoveEval eval(board);
-	Bitboard bb = eval.getAvailableMoves(B2);
+	Bitboard bb = eval.getAttackedSquares();
 
 	BoardTerminalFormatter fmt;
 	fmt.setBoard(board);

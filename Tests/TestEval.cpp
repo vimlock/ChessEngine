@@ -291,13 +291,190 @@ TEST_CASE("Bishop moves")
 		board.setSquare(D5, WHITE, BISHOP);
 		REQUIRE(MoveEval(board).getAvailableMoves(D5).count() == 13);
 	}
+
+	SECTION("On corners blocked") {
+		Board board;
+
+		board.clear();
+		board.setSquare(A1, WHITE, BISHOP);
+		board.setSquare(B2, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 0);
+
+		board.clear();
+		board.setSquare(H1, WHITE, BISHOP);
+		board.setSquare(G2, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H1).count() == 0);
+		
+		board.clear();
+		board.setSquare(A8, WHITE, BISHOP);
+		board.setSquare(B7, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A8).count() == 0);
+
+		board.clear();
+		board.setSquare(H8, WHITE, BISHOP);
+		board.setSquare(G7, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H8).count() == 0);
+	}
+
+	SECTION("On corners blocked but can capture") {
+		Board board;
+
+		board.clear();
+		board.setSquare(A1, WHITE, BISHOP);
+		board.setSquare(B2, BLACK, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 1);
+
+		board.clear();
+		board.setSquare(H1, WHITE, BISHOP);
+		board.setSquare(G2, BLACK, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H1).count() == 1);
+		
+		board.clear();
+		board.setSquare(A8, WHITE, BISHOP);
+		board.setSquare(B7, BLACK, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A8).count() == 1);
+
+		board.clear();
+		board.setSquare(H8, WHITE, BISHOP);
+		board.setSquare(G7, BLACK, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H8).count() == 1);
+	}
 }
 
 // Internally implemented as rook+bishop but sanity checking is always good
 TEST_CASE("Queen moves")
 {
+	SECTION("On corners unblocked") {
+		Board board;
+
+		board.clear();
+		board.setSquare(A1, WHITE, QUEEN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 21);
+
+		board.clear();
+		board.setSquare(H1, WHITE, QUEEN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H1).count() == 21);
+
+		board.clear();
+		board.setSquare(H8, WHITE, QUEEN);
+		REQUIRE(MoveEval(board).getAvailableMoves(H8).count() == 21);
+
+		board.clear();
+		board.setSquare(A1, WHITE, QUEEN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 21);
+	}
 }
 
 TEST_CASE("King moves")
 {
+	SECTION("On corners unblocked") {
+		Board board;
+
+		board.clear();
+		board.setSquare(A1, WHITE, KING);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 3);
+
+		board.clear();
+		board.setSquare(H1, WHITE, KING);
+		REQUIRE(MoveEval(board).getAvailableMoves(H1).count() == 3);
+
+		board.clear();
+		board.setSquare(H8, WHITE, KING);
+		REQUIRE(MoveEval(board).getAvailableMoves(H8).count() == 3);
+
+		board.clear();
+		board.setSquare(A1, WHITE, KING);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 3);
+	}
+
+	SECTION("On corners blocked") {
+		Board board;
+
+		board.clear();
+		board.setSquare(A1, WHITE, KING);
+		board.setSquare(B2, WHITE, PAWN);
+		board.setSquare(A2, WHITE, PAWN);
+		board.setSquare(B1, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 0);
+	}
+
+	SECTION("King can't move to check") {
+		Board board;
+
+		board.clear();
+		board.setSquare(D1, WHITE, KING);
+		board.setSquare(C8, BLACK, ROOK);
+		board.setSquare(E8, BLACK, ROOK);
+		REQUIRE(MoveEval(board).getAvailableMoves(D1).count() == 1);
+	}
+}
+
+TEST_CASE("King in check")
+{
+	SECTION("By pawn") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.clear();
+		board.setSquare(E4, WHITE, KING);
+		board.setSquare(D5, BLACK, PAWN);
+		REQUIRE(MoveEval(board).isInCheck());
+
+		board.clear();
+		board.setSquare(E4, WHITE, KING);
+		board.setSquare(F5, BLACK, PAWN);
+		REQUIRE(MoveEval(board).isInCheck());
+	}
+
+	SECTION("By rook") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.clear();
+		board.setSquare(D8, BLACK, ROOK);
+		board.setSquare(D1, WHITE, KING);
+		REQUIRE(MoveEval(board).isInCheck());
+
+		board.clear();
+		board.setSquare(A1, BLACK, ROOK);
+		board.setSquare(D1, WHITE, KING);
+		REQUIRE(MoveEval(board).isInCheck());
+
+		board.clear();
+		board.setSquare(E8, BLACK, ROOK);
+		board.setSquare(D1, WHITE, KING);
+		REQUIRE(!MoveEval(board).isInCheck());
+
+		board.clear();
+		board.setSquare(A2, BLACK, ROOK);
+		board.setSquare(D1, WHITE, KING);
+		REQUIRE(!MoveEval(board).isInCheck());
+	}
+
+	SECTION("By knight") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.clear();
+		board.setSquare(E4, WHITE, KING);
+		board.setSquare(G3, BLACK, KNIGHT);
+		REQUIRE(MoveEval(board).isInCheck());
+
+		board.clear();
+		board.setSquare(E4, WHITE, KING);
+		board.setSquare(F6, BLACK, KNIGHT);
+		REQUIRE(MoveEval(board).isInCheck());
+	}
+
+	SECTION("King can capture out of check") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.clear();
+		board.setSquare(A1, WHITE, KING);
+		board.setSquare(B2, BLACK, QUEEN);
+
+		REQUIRE(MoveEval(board).isInCheck());
+		REQUIRE(MoveEval(board).getAvailableMoves(A1).count() == 1);
+	}
 }

@@ -31,6 +31,18 @@ Bitboard BoardUtils::getPieces(const Board &board, Piece piece)
 	return ret;
 }
 
+Bitboard BoardUtils::getPieces(const Board &board, Color color, Piece piece)
+{
+	Bitboard ret;
+	uint8_t mask  = color | piece;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
 
 int BoardUtils::getRank(RankAndFile::Enum raf)
 {
@@ -48,6 +60,14 @@ MoveEval::MoveEval(const Board &board_):
 	ownPieces = BoardUtils::getPieces(board, board.getCurrent());
 	oppPieces = BoardUtils::getPieces(board, getOpponent(board.getCurrent()));
 	allPieces = ownPieces | oppPieces;
+	ownKing = BoardUtils::getPieces(board, board.getCurrent(), KING);
+
+	// Cache squares where opponent is attacking.
+	for (uint64_t i = 0; i < 64; ++i) {
+		if (!(oppPieces & (Bitboard(1) << i)).empty()) {
+			attackedSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
+		}
+	}
 }
 
 Color MoveEval::getOpponent(Color color) const
@@ -63,10 +83,49 @@ Color MoveEval::getOpponent(Color color) const
 Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
 {
 	Square square = board.getSquare(raf);
+	Bitboard ret;
 
 	switch (square.getPiece()) {
 		case PAWN:
-			return getPawnMoves(square.getColor(), raf);
+			ret = getPawnMoves(square.getColor(), raf);
+
+			// Prevent attack to where there is no enemy pieces
+			ret |= oppPieces & getPawnAttacks(square.getColor(), raf);
+			break;
+		case ROOK:
+			ret = getRookMoves(raf);
+			break;
+		case KNIGHT:
+			ret = getKnightMoves(raf);
+			break;
+		case BISHOP:
+			ret = getBishopMoves(raf);
+			break;
+		case QUEEN:
+			ret = getQueenMoves(raf);
+			break;
+		case KING:
+			ret = getKingMoves(square.getColor(), raf);
+			// Exclude squares which would put us in check.
+			ret = ret & ~attackedSquares;
+			break;
+		default:
+			assert(false && "Should be unreachable");
+	}
+
+	// Don't capture our own pieces...
+	ret = ret & ~ownPieces;
+
+	return ret;
+}
+
+Bitboard MoveEval::getAvailableCaptures(RankAndFile::Enum raf) const
+{
+	Square square = board.getSquare(raf);
+
+	switch (square.getPiece()) {
+		case PAWN:
+			return getPawnAttacks(square.getColor(), raf);
 		case ROOK:
 			return getRookMoves(raf);
 		case KNIGHT:
@@ -83,7 +142,16 @@ Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
 	return Bitboard();
 }
 
-// TODO: en-passant
+Bitboard MoveEval::getAttackedSquares() const
+{
+	return attackedSquares;
+}
+
+bool MoveEval::isInCheck() const
+{
+	return attackedSquares.overlaps(ownKing);
+}
+
 Bitboard MoveEval::getPawnMoves(Color color, RankAndFile::Enum raf) const
 {
 	Bitboard ret;
@@ -111,13 +179,25 @@ Bitboard MoveEval::getPawnMoves(Color color, RankAndFile::Enum raf) const
 		}
 	}
 
-	// Can capture a left piece?
-	if (file > FILE_A && oppPieces.contains(file - 1, rank + dir)) {
+	return ret;
+}
+
+// TODO: en-passant
+Bitboard MoveEval::getPawnAttacks(Color color, RankAndFile::Enum raf) const
+{
+	Bitboard ret;
+
+	int rank = BoardUtils::getRank(raf);
+	int file = BoardUtils::getFile(raf);
+	int dir = color == WHITE ? +1 : -1;
+
+	// Can capture a left diagonal piece?
+	if (file > FILE_A) {
 		ret |= Bitboard(file - 1, rank + dir);
 	}
 
-	// Can capture a right piece?
-	if (file < FILE_H && oppPieces.contains(file + 1, rank + dir)) {
+	// Can capture a right diagonal piece?
+	if (file < FILE_H) {
 		ret |= Bitboard(file + 1, rank + dir);
 	}
 
@@ -180,9 +260,6 @@ Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
 
 	}
 
-	// Exclude our own pieces.
-	ret = ret & ~ownPieces;
-
 	return ret;
 }
 
@@ -208,9 +285,6 @@ Bitboard MoveEval::getKnightMoves(RankAndFile::Enum raf) const
 	ret |= Bitboard(pos << (8*1-2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
 	// Left 2, down 1
 	ret |= Bitboard(pos >> (8*1+2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
-
-	// Exclude our own pieces.
-	ret = ret & ~ownPieces;
 
 	return ret;
 }
@@ -259,9 +333,6 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 			break;
 	}
 
-	// Exclude our own pieces.
-	ret = ret & ~ownPieces;
-
 	return ret;
 }
 
@@ -297,9 +368,6 @@ Bitboard MoveEval::getKingMoves(Color color, RankAndFile::Enum raf) const
 	ret |= Bitboard(pos >> (8+1)) & ~Bitboard::file(FILE_H);
 	// Down Right
 	ret |= Bitboard(pos >> (8-1)) & ~Bitboard::file(FILE_A);
-
-	// Exclude our own pieces.
-	ret = ret & ~ownPieces;
 
 	return ret;
 }
