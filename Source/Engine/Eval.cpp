@@ -75,8 +75,15 @@ MoveEval::MoveEval(const Board &board_):
 
 	// Cache squares where opponent is attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
-		if (!(oppPieces & (Bitboard(1) << i)).empty()) {
+		if (oppPieces & (Bitboard(1) << i)) {
 			attackedSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
+		}
+	}
+
+	// Cache squares where we are attacking.
+	for (uint64_t i = 0; i < 64; ++i) {
+		if (ownPieces & (Bitboard(1) << i)) {
+			attackingSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
 		}
 	}
 }
@@ -143,14 +150,24 @@ Bitboard MoveEval::getAvailableCaptures(RankAndFile::Enum raf) const
 	return Bitboard();
 }
 
-const Bitboard & MoveEval::getOwnPieces() const
+Bitboard MoveEval::getOwnPieces() const
 {
 	return ownPieces;
+}
+
+Bitboard MoveEval::getOppPieces() const
+{
+	return oppPieces;
 }
 
 Bitboard MoveEval::getAttackedSquares() const
 {
 	return attackedSquares;
+}
+
+Bitboard MoveEval::getAttackingSquares() const
+{
+	return attackingSquares;
 }
 
 bool MoveEval::isInCheck() const
@@ -304,38 +321,38 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 
 	// Up left diagonal
 	tmp = Bitboard(pos);
-	while (!tmp.empty()) {
+	while (tmp) {
 		tmp = (tmp << (8-1)) & ~Bitboard::file(FILE_H);
 		ret |= tmp;
 
-		if (!(allPieces & tmp).empty())
+		if (allPieces & tmp)
 			break;
 	}
 
 	// Up right diagonal
 	tmp = Bitboard(pos);
-	while (!tmp.empty()) {
+	while (tmp) {
 		tmp = (tmp << (8+1)) & ~Bitboard::file(FILE_A);
 		ret |= tmp;
-		if (!(allPieces & tmp).empty())
+		if (allPieces & tmp)
 			break;
 	}
 
 	// Down left diagonal
 	tmp = Bitboard(pos);
-	while (!tmp.empty()) {
+	while (tmp) {
 		tmp = (tmp >> (8-1)) & ~Bitboard::file(FILE_A);
 		ret |= tmp;
-		if (!(allPieces & tmp).empty())
+		if (allPieces & tmp)
 			break;
 	}
 
 	// Down right diagonal
 	tmp = Bitboard(pos);
-	while (!tmp.empty()) {
+	while (tmp) {
 		tmp = (tmp >> (8+1)) & ~Bitboard::file(FILE_H);
 		ret |= tmp;
-		if (!(allPieces & tmp).empty())
+		if (allPieces & tmp)
 			break;
 	}
 

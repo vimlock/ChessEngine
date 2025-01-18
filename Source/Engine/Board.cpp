@@ -135,7 +135,7 @@ bool Board::applyMoves(const MoveList &moves)
 {
 	for (const Move &it : moves) {
 
-		if (!movePiece(it.getSource(), it.getDestination()))
+		if (!movePiece(it.getSource(), it.getDestination(), it.getPromotion()))
 			return false;
 
 		flipCurrent();
@@ -145,12 +145,16 @@ bool Board::applyMoves(const MoveList &moves)
 }
 
 /// TODO: Currently this allows capturing our own pieces
-bool Board::movePiece(RankAndFile::Enum src, RankAndFile::Enum dst)
+bool Board::movePiece(RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote)
 {
 	Square tmp = getSquare(src);
 	if (!tmp.isOccupied()) {
 		logError("Source square is not occupied");
 		return false;
+	}
+
+	if (promote != PAWN) {
+		tmp = Square(tmp.getColor(), promote);
 	}
 
 	setSquare(dst, tmp);

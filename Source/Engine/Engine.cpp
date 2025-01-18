@@ -6,11 +6,33 @@
 
 #include <cassert>
 #include <cstddef>
+#include <limits>
+#include <iostream>
 
 namespace vimlock
 {
 
 using namespace RankAndFile;
+
+Move Node::getMove() const
+{
+	return Move(src, dst, promote);
+}
+
+std::string Node::getPath() const
+{
+	std::string ret;
+
+	const Node *it = this;
+	while (it->parent != nullptr) {
+		if (!ret.empty())
+			ret += ' ';
+		ret += it->getMove().toLan();
+		it = it->parent;
+	}
+
+	return ret;
+}
 
 Engine::Engine()
 {
@@ -20,6 +42,11 @@ Engine::Engine()
 void Engine::setPosition(const Board &board_)
 {
 	board = board_;
+}
+
+Board Engine::getPosition() const
+{
+	return board;
 }
 
 void Engine::start()
@@ -35,12 +62,14 @@ bool Engine::poll(Move &ret)
 
 	traverse(root);
 
-	if (!root->firstChild) {
-		logError("No available moves?");
+	if (!root->bestChild) {
+		logError("No available move?");
 		return false;
 	}
 
-	ret = Move(root->firstChild->src, root->firstChild->dst);
+	ret = root->bestChild->getMove();
+
+	logInfo("Best move: " + ret.toLan()  + " " + std::to_string(root->bestChild->eval));
 
 	return true;
 }
@@ -52,16 +81,14 @@ void Engine::stop()
 
 void Engine::traverse(Node *node)
 {
-	evaluate(node);
+	MoveEval eval(node->board);
 
 	if (node->depth >= maxDepth) {
-		logInfo("Max depth reached");
+		evaluate(node, eval);
 		return;
 	}
 
-	MoveEval eval(node->board);
-
-	const Bitboard &ownPieces = eval.getOwnPieces();
+	Bitboard ownPieces = eval.getOwnPieces();
 
 	for (uint64_t i = 0; i < 64; ++i) {
 		if ((ownPieces & Bitboard(static_cast<uint64_t>(1)) << i).empty())
@@ -71,44 +98,135 @@ void Engine::traverse(Node *node)
 
 		// Create a subnode for each possible move
 		for (uint64_t k = 0; k < 64; ++k) {
-			if ((moves & Bitboard(static_cast<uint64_t>(1) << k)).empty())
+
+			Bitboard dstBitboard = Bitboard(static_cast<uint64_t>(1) << k);
+
+			// Not a valid move?
+			if ((moves & dstBitboard).empty())
 				continue;
 
-			logInfo("Add node " + std::to_string(k));
+			if (node->childCount >= Node::maxChildren)
+				break;
 
-			Node *child = allocNode();
-			child->board = node->board;
-			child->depth = node->depth + 1;
-			child->board.flipCurrent();
-			child->parent = node;
-			child->src = static_cast<RankAndFile::Enum>(i);
-			child->dst = static_cast<RankAndFile::Enum>(k);
+			RankAndFile::Enum srcSquare = static_cast<RankAndFile::Enum>(i);
+			RankAndFile::Enum dstSquare = static_cast<RankAndFile::Enum>(k);
 
-			child->nextSibling = node->firstChild;
-			node->firstChild = child;
+			Piece piece = node->board.getSquare(srcSquare).getPiece();
+
+			if (piece == PAWN && !(dstBitboard & (Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1))).empty()) {
+				// Add possible promotions
+				addChildNode(node, srcSquare, dstSquare, ROOK);
+				addChildNode(node, srcSquare, dstSquare, KNIGHT);
+				addChildNode(node, srcSquare, dstSquare, BISHOP);
+				addChildNode(node, srcSquare, dstSquare, QUEEN);
+			}
+			else {
+				// Regular move
+				addChildNode(node, srcSquare, dstSquare);
+			}
 		}
 	}
+
+	for (int i = 0; i < node->childCount; ++i) {
+		traverse(node->children[i]);
+	}
+
+	minimax(node, board.getCurrent() != node->board.getCurrent());
 }
 
-void Engine::evaluate(Node *node)
+void Engine::addChildNode(Node *parent, RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote)
 {
-	node->eval = getScore(node, WHITE) - getScore(node, BLACK);
+	Node *child = allocNode();
+	child->src = src;
+	child->dst = dst;
+	child->board = parent->board;
+
+	if (!child->board.movePiece(child->src, child->dst, child->promote)) {
+		assert(false && "invalid move when traversing");
+	}
+
+	// Don't move into check
+	if (MoveEval(child->board).isInCheck()) {
+		freeNode(child);
+		return;
+	}
+
+	child->board.flipCurrent();
+	child->depth = parent->depth + 1;
+	child->parent = parent;
+
+	parent->children[parent->childCount++] = child;
 }
 
-int Engine::getScore(Node *node, Color color) const
+void Engine::evaluate(Node *node, const MoveEval &eval)
+{
+	int own = getScore(node, eval, WHITE);
+	int opp = getScore(node, eval, BLACK);
+
+	node->eval = own - opp;
+
+#if 0
+	logInfo("eval " + node->getPath() + " " +
+			std::to_string(own) + " - " + std::to_string(opp) +
+			" = " + std::to_string(node->eval));
+#endif
+}
+
+void Engine::minimax(Node *node, bool maximizing) const
+{
+	int eval;
+	Node *best = nullptr;
+
+	if (maximizing) {
+		eval = std::numeric_limits<int>::min();
+		for (int i = 0; i < node->childCount; ++i) {
+			Node *child = node->children[i];
+			if (eval < child->eval) {
+				eval = child->eval;
+				best = child;
+			}
+		}
+	}
+	else {
+		eval = std::numeric_limits<int>::max();
+		for (int i = 0; i < node->childCount; ++i) {
+			Node *child = node->children[i];
+
+			if (eval > child->eval) {
+				eval = child->eval;
+				best = child;
+			}
+		}
+	}
+
+	node->bestChild = best;
+	node->eval = eval;
+}
+
+int Engine::getScore(Node *node, const MoveEval &eval, Color color) const
 {
 	int ret = 0;
 
 	// Sum raw piece values
 	for (int i = 0; i <  64; ++i) {
-		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		Square square = node->board.getSquare(static_cast<RankAndFile::Enum>(i));
 
 		if (!square.isOccupied() || square.getColor() != color)
 			continue;
 
 		ret += getPieceValue(square.getPiece());
 	}
-	
+
+	if (eval.isInCheck()) {
+		ret -= 500;
+	}
+
+	// Controlling more squares is good, I think?
+	ret += eval.getAttackingSquares().count() * 10;
+
+	// Even better if we're actually targetting something.
+	ret += (eval.getOppPieces() & eval.getAttackingSquares()).count() * 10;
+
 	return ret;
 }
 
@@ -132,10 +250,11 @@ Node * Engine::allocNode()
 	Node *node = new Node();
 
 	node->parent = nullptr;
-	node->nextSibling = nullptr;
-	node->firstChild = nullptr;
 	node->depth = 0;
+	node->promote = PAWN;
 	node->eval = 0;
+	node->bestChild = nullptr;
+	node->childCount = 0;
 
 	return node;
 }

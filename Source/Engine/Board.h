@@ -88,7 +88,7 @@ public:
 	/// Move given piece.
 	/// Does not change current players turn.
 	/// Return false if the move was not legal.
-	bool movePiece(RankAndFile::Enum src, RankAndFile::Enum dst);
+	bool movePiece(RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote=PAWN);
 
 	/// Apply given moves to board state.
 	bool applyMoves(const MoveList &moves);

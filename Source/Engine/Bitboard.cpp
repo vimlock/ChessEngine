@@ -47,7 +47,7 @@ uint64_t Bitboard::rawBits() const
 
 bool Bitboard::contains(int file, int rank) const
 {
-	return !(*this & Bitboard(file, rank)).empty();
+	return (*this & Bitboard(file, rank));
 }
 
 bool Bitboard::overlaps(const Bitboard &other) const
@@ -88,6 +88,11 @@ Bitboard Bitboard::flipRanks() const
 	return Bitboard(ret);
 }
 
+Bitboard::operator bool () const
+{
+	return bits;
+}
+
 Bitboard Bitboard::operator ~ () const
 {
 	return inverted();
@@ -118,9 +123,19 @@ Bitboard Bitboard::operator << (uint64_t nbits) const
 	return Bitboard(bits << nbits);
 }
 
+Bitboard Bitboard::operator << (int nbits) const
+{
+	return Bitboard(bits << static_cast<uint64_t>(nbits));
+}
+
 Bitboard Bitboard::operator >> (uint64_t nbits) const
 {
 	return Bitboard(bits >> nbits);
+}
+
+Bitboard Bitboard::operator >> (int nbits) const
+{
+	return Bitboard(bits >> static_cast<uint64_t>(nbits));
 }
 
 } // namespace vimlock

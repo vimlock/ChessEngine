@@ -7,9 +7,17 @@ namespace vimlock
 {
 
 class Move;
+class MoveEval;
 
 struct Node
 {
+	/// Theoretical maximum is 218 based on web search.
+	static const int maxChildren = 256;
+
+	Move getMove() const;
+
+	std::string getPath() const;
+
 	/// Board state at this node
 	Board board;
 
@@ -19,6 +27,9 @@ struct Node
 	/// Move which led to this node
 	RankAndFile::Enum dst;
 
+	/// If the move promoted to something.
+	Piece promote;
+
 	/// Evaluation at this point.
 	int eval;
 
@@ -27,9 +38,10 @@ struct Node
 
 	Node *parent;
 
-	Node *nextSibling;
+	Node *bestChild;
 
-	Node *firstChild;
+	int childCount;
+	Node *children[maxChildren];
 };
 
 class Engine
@@ -39,6 +51,9 @@ public:
 
 	/// Set current board position.
 	void setPosition(const Board &board);
+
+	/// Get current board position.
+	Board getPosition() const;
 
 	/// Start searching for a best move from current position.
 	void start();
@@ -53,10 +68,14 @@ public:
 private:
 	void traverse(Node *node);
 
-	/// Evaluate current nodes position, taking into account piece value, king safety, etc.
-	void evaluate(Node *node);
+	void addChildNode(Node *parent, RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote=PAWN);
 
-	int getScore(Node *node, Color color) const;
+	/// Evaluate current nodes position, taking into account piece value, king safety, etc.
+	void evaluate(Node *node, const MoveEval &eval);
+
+	void minimax(Node *node, bool maximizing) const;
+
+	int getScore(Node *node, const MoveEval &eval, Color color) const;
 
 	Node * allocNode();
 	void freeNode(Node *node);
@@ -65,7 +84,7 @@ private:
 
 	Board board;
 	
-	int maxDepth = 2;
+	int maxDepth = 4;
 };
 
 } // namespace vimlock

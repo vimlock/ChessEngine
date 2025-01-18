@@ -38,8 +38,11 @@ class MoveEval
 public:
 	MoveEval(const Board &board);
 
-	/// Return bitmask of all of our own pieces
-	const Bitboard & getOwnPieces() const;
+	/// Return bitboard of all of our own pieces.
+	Bitboard getOwnPieces() const;
+
+	/// Return bitboard of opponent pieces.
+	Bitboard getOppPieces() const;
 
 	/// Returns bitboard of all positions given piece can be moved to
 	Bitboard getAvailableMoves(RankAndFile::Enum raf) const;
@@ -52,6 +55,9 @@ public:
 	/// Return squares which opponent is currently attacking (and where king can't be moved to).
 	Bitboard getAttackedSquares() const;
 
+	/// Return squares where we are currently attacking.
+	Bitboard getAttackingSquares() const;
+
 	/// Returns true if the current player is currently is check.
 	bool isInCheck() const;
 
@@ -63,7 +69,6 @@ private:
 	Bitboard getBishopMoves(RankAndFile::Enum raf) const;
 	Bitboard getQueenMoves(RankAndFile::Enum raf) const;
 	Bitboard getKingMoves(Color color, RankAndFile::Enum raf) const;
-
 
 	/// Current board state.
 	const Board &board;
@@ -82,6 +87,9 @@ private:
 
 	/// Squares currently threathened by opponent.
 	Bitboard attackedSquares;
+
+	/// Squares currently threathened by us.
+	Bitboard attackingSquares;
 };
 
 } // namespace vimlock

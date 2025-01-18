@@ -73,6 +73,12 @@ TEST_CASE("Bitboard ops")
 	SECTION("operator & work") {
 		REQUIRE((Bitboard(0xFF00FFULL) & Bitboard(0xFFFF00ULL)).count() == 8);
 	}
+
+	SECTION("bool cast works") {
+		REQUIRE(!Bitboard());
+		REQUIRE(Bitboard(0x1ULL));
+		REQUIRE(Bitboard(0xFFFFFFFFFFULL));
+	}
 }
 
 TEST_CASE("Bitboard flip ranks")

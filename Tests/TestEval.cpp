@@ -93,6 +93,34 @@ TEST_CASE("Pawn moves")
 		board.setSquare(B6, WHITE, PAWN);
 		REQUIRE(MoveEval(board).getAvailableMoves(A7).count() == 1);
 	}
+
+	SECTION("White pawn can promote") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.setSquare(A7, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A7).count() == 1);
+	}
+
+	SECTION("White pawn can capture and promote") {
+		Board board;
+		board.setCurrent(WHITE);
+
+		board.setSquare(A7, WHITE, PAWN);
+		board.setSquare(A8, BLACK, PAWN);
+		board.setSquare(B8, BLACK, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A7).count() == 1);
+	}
+
+	SECTION("Black pawn can promote and capture") {
+		Board board;
+		board.setCurrent(BLACK);
+
+		board.setSquare(A2, BLACK, PAWN);
+		board.setSquare(A1, WHITE, PAWN);
+		board.setSquare(B1, WHITE, PAWN);
+		REQUIRE(MoveEval(board).getAvailableMoves(A2).count() == 1);
+	}
 }
 
 TEST_CASE("Rook moves")

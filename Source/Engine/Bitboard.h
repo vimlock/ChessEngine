@@ -47,6 +47,9 @@ public:
 	/// Flip the board rank around, rank 1 becomes 8 and vice versa.
 	Bitboard flipRanks() const;
 
+	/// If any bit is set returns true, otherwise returns false.
+	operator bool () const;
+
 	/// Returns inverted version of this bitboard with squares flipped.
 	Bitboard operator ~ () const;
 
@@ -60,9 +63,11 @@ public:
 
 	// Shift all bits to left by `nbits`.
 	Bitboard operator << (uint64_t nbits) const;
+	Bitboard operator << (int nbits) const;
 
 	// Shift all bits to right by `nbits`.
 	Bitboard operator >> (uint64_t nbits) const;
+	Bitboard operator >> (int nbits) const;
 
 private:
 	uint64_t bits;
