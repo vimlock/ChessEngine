@@ -52,8 +52,6 @@ void Board::clear()
 
 void Board::setStandardPosition()
 {
-	using namespace RankAndFile;
-
 	// Clear any previous board state.
 	clear();
 
@@ -96,24 +94,29 @@ void Board::setStandardPosition()
 	setSquare(H7, BLACK, PAWN);
 }
 
-void Board::setSquare(RankAndFile::Enum raf, Color color, Piece piece)
+void Board::setSquare(Square idx, Color color, Piece piece)
 {
-	setSquare(raf, SquareState(color, piece));
+	setSquare(idx, SquareState(color, piece));
 }
 
-void Board::setSquare(RankAndFile::Enum raf, SquareState square)
+void Board::setSquare(RankAndFile idx, Color color, Piece piece)
 {
-	squares[raf] = square;
+	setSquare(Square(idx), SquareState(color, piece));
 }
 
-SquareState Board::getSquare(RankAndFile::Enum raf) const
+void Board::setSquare(Square idx, SquareState square)
 {
-	return squares[raf];
+	squares[idx.getIndex()] = square;
+}
+
+SquareState Board::getSquare(Square idx) const
+{
+	return squares[idx.getIndex()];
 }
 
 SquareState Board::getSquare(int file, int rank) const
 {
-	return getSquare(static_cast<RankAndFile::Enum>(rank * 8 + file));
+	return getSquare(Square(file, rank));
 }
 
 Color Board::getCurrent() const
@@ -145,7 +148,7 @@ bool Board::applyMoves(const MoveList &moves)
 }
 
 /// TODO: Currently this allows capturing our own pieces
-bool Board::movePiece(RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote)
+bool Board::movePiece(Square src, Square dst, Piece promote)
 {
 	SquareState tmp = getSquare(src);
 	if (!tmp.isOccupied()) {

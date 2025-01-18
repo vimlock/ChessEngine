@@ -1,7 +1,7 @@
 #ifndef __BITBOARD_H__
 #define __BITBOARD_H__
 
-#include <cstdint>
+#include "Square.h"
 
 namespace vimlock
 {
@@ -14,8 +14,8 @@ public:
 	/// Construct a bitboard with all bits set to 0
 	explicit Bitboard();
 
-	/// Construct a bitboard with given bit set to 1
-	explicit Bitboard(int file, int rank);
+	/// Construct a bitboard with given square set to 1
+	explicit Bitboard(Square square);
 
 	/// Construct a bitboard with all bits assigned
 	explicit Bitboard(uint64_t bits);
@@ -31,6 +31,7 @@ public:
 
 	/// Returns true if given bit on file and rank is set.
 	bool contains(int file, int rank) const;
+	bool contains(Square square) const;
 
 	/// Returns true if the bitboards have overlapping bits
 	bool overlaps(const Bitboard &other) const;

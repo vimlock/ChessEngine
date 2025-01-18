@@ -22,10 +22,10 @@ struct Node
 	Board board;
 
 	/// Piece which was moved.
-	RankAndFile::Enum src;
+	Square src;
 
 	/// Move which led to this node
-	RankAndFile::Enum dst;
+	Square dst;
 
 	/// If the move promoted to something.
 	Piece promote;
@@ -68,7 +68,7 @@ public:
 private:
 	void traverse(Node *node);
 
-	void addChildNode(Node *parent, RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote=PAWN);
+	void addChildNode(Node *parent, Square src, Square dst, Piece promote=PAWN);
 
 	/// Evaluate current nodes position, taking into account piece value, king safety, etc.
 	void evaluate(Node *node, const MoveEval &eval);

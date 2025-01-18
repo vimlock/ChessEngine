@@ -2,7 +2,6 @@
 #include "Engine/Move.h"
 
 using namespace vimlock;
-using namespace RankAndFile;
 
 TEST_CASE("Move to LAN string")
 {

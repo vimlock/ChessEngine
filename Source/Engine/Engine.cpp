@@ -1,7 +1,6 @@
 #include "Engine.h"
 #include "Eval.h"
 #include "Move.h"
-#include "RankAndFile.h"
 #include "Log.h"
 
 #include <cassert>
@@ -11,8 +10,6 @@
 
 namespace vimlock
 {
-
-using namespace RankAndFile;
 
 Move Node::getMove() const
 {
@@ -91,15 +88,15 @@ void Engine::traverse(Node *node)
 	Bitboard ownPieces = eval.getOwnPieces();
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		if (ownPieces & Bitboard(static_cast<uint64_t>(1)) << i)
+		if (ownPieces & Bitboard(Square(i)))
 			continue;
 
-		Bitboard moves = eval.getAvailableMoves(static_cast<RankAndFile::Enum>(i));
+		Bitboard moves = eval.getAvailableMoves(Square(i));
 
 		// Create a subnode for each possible move
 		for (uint64_t k = 0; k < 64; ++k) {
 
-			Bitboard dstBitboard = Bitboard(static_cast<uint64_t>(1) << k);
+			Bitboard dstBitboard = Bitboard(Square(k));
 
 			// Not a valid move?
 			if (!(moves & dstBitboard))
@@ -108,8 +105,8 @@ void Engine::traverse(Node *node)
 			if (node->childCount >= Node::maxChildren)
 				break;
 
-			RankAndFile::Enum srcSquare = static_cast<RankAndFile::Enum>(i);
-			RankAndFile::Enum dstSquare = static_cast<RankAndFile::Enum>(k);
+			Square srcSquare = Square(i);
+			Square dstSquare = Square(k);
 
 			Piece piece = node->board.getSquare(srcSquare).getPiece();
 
@@ -134,7 +131,7 @@ void Engine::traverse(Node *node)
 	minimax(node, board.getCurrent() != node->board.getCurrent());
 }
 
-void Engine::addChildNode(Node *parent, RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote)
+void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 {
 	Node *child = allocNode();
 	child->src = src;
@@ -209,7 +206,7 @@ int Engine::getScore(Node *node, const MoveEval &eval, Color color) const
 
 	// Sum raw piece values
 	for (int i = 0; i <  64; ++i) {
-		SquareState square = node->board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = node->board.getSquare(Square(i));
 
 		if (!square.isOccupied() || square.getColor() != color)
 			continue;

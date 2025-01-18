@@ -12,7 +12,7 @@ Bitboard BoardUtils::getPieces(const Board &board, Color color)
 	Bitboard ret;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(Square(i));
 		ret |= Bitboard(((square.getBits() & color) ? 1ULL : 0ULL) << i);
 	}
 
@@ -24,7 +24,7 @@ Bitboard BoardUtils::getPieces(const Board &board, Piece piece)
 	Bitboard ret;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(Square(i));
 		ret |= Bitboard(((square.getBits() & piece) ? 1ULL : 0ULL) << i);
 	}
 
@@ -37,21 +37,11 @@ Bitboard BoardUtils::getPieces(const Board &board, Color color, Piece piece)
 	uint8_t mask  = color | piece;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(Square(i));
 		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
 	}
 
 	return ret;
-}
-
-int BoardUtils::getRank(RankAndFile::Enum raf)
-{
-	return static_cast<int>(raf) / 8;
-}
-
-int BoardUtils::getFile(RankAndFile::Enum raf)
-{
-	return static_cast<int>(raf) % 8;
 }
 
 Color BoardUtils::getOpponent(Color color)
@@ -76,44 +66,44 @@ MoveEval::MoveEval(const Board &board_):
 	// Cache squares where opponent is attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
 		if (oppPieces & (Bitboard(1) << i)) {
-			attackedSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
+			attackedSquares |= getAvailableCaptures(Square(i));
 		}
 	}
 
 	// Cache squares where we are attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
 		if (ownPieces & (Bitboard(1) << i)) {
-			attackingSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
+			attackingSquares |= getAvailableCaptures(Square(i));
 		}
 	}
 }
 
-Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
+Bitboard MoveEval::getAvailableMoves(Square idx) const
 {
-	SquareState square = board.getSquare(raf);
+	SquareState square = board.getSquare(idx);
 	Bitboard ret;
 
 	switch (square.getPiece()) {
 		case PAWN:
-			ret = getPawnMoves(square.getColor(), raf);
+			ret = getPawnMoves(square.getColor(), idx);
 
 			// Prevent attack to where there is no enemy pieces
-			ret |= oppPieces & getPawnAttacks(square.getColor(), raf);
+			ret |= oppPieces & getPawnAttacks(square.getColor(), idx);
 			break;
 		case ROOK:
-			ret = getRookMoves(raf);
+			ret = getRookMoves(idx);
 			break;
 		case KNIGHT:
-			ret = getKnightMoves(raf);
+			ret = getKnightMoves(idx);
 			break;
 		case BISHOP:
-			ret = getBishopMoves(raf);
+			ret = getBishopMoves(idx);
 			break;
 		case QUEEN:
-			ret = getQueenMoves(raf);
+			ret = getQueenMoves(idx);
 			break;
 		case KING:
-			ret = getKingMoves(square.getColor(), raf);
+			ret = getKingMoves(idx);
 			// Exclude squares which would put us in check.
 			ret = ret & ~attackedSquares;
 			break;
@@ -127,23 +117,23 @@ Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
 	return ret;
 }
 
-Bitboard MoveEval::getAvailableCaptures(RankAndFile::Enum raf) const
+Bitboard MoveEval::getAvailableCaptures(Square idx) const
 {
-	SquareState square = board.getSquare(raf);
+	SquareState square = board.getSquare(idx);
 
 	switch (square.getPiece()) {
 		case PAWN:
-			return getPawnAttacks(square.getColor(), raf);
+			return getPawnAttacks(square.getColor(), idx);
 		case ROOK:
-			return getRookMoves(raf);
+			return getRookMoves(idx);
 		case KNIGHT:
-			return getKnightMoves(raf);
+			return getKnightMoves(idx);
 		case BISHOP:
-			return getBishopMoves(raf);
+			return getBishopMoves(idx);
 		case QUEEN:
-			return getQueenMoves(raf);
+			return getQueenMoves(idx);
 		case KING:
-			return getKingMoves(square.getColor(), raf);
+			return getKingMoves(idx);
 	}
 
 	// Empty square?
@@ -175,29 +165,29 @@ bool MoveEval::isInCheck() const
 	return attackedSquares.overlaps(ownKing);
 }
 
-Bitboard MoveEval::getPawnMoves(Color color, RankAndFile::Enum raf) const
+Bitboard MoveEval::getPawnMoves(Color color, Square idx) const
 {
 	Bitboard ret;
 
-	int rank = BoardUtils::getRank(raf);
-	int file = BoardUtils::getFile(raf);
+	int rank = idx.getRank();
+	int file = idx.getFile();
 	int dir = color == WHITE ? +1 : -1;
 
 	// Can move forward one step?
 	if (!allPieces.contains(file, rank + dir)) {
-		ret |= Bitboard(file, rank + dir);
+		ret |= Bitboard(Square(file, rank + dir));
 
 		// Can perform double move? Only valid if we can move at least one step
 
 		if (color == WHITE && rank == RANK_2) {
 			if (!allPieces.contains(file, rank + 2)) {
-				ret |= Bitboard(file, rank + 2);
+				ret |= Bitboard(Square(file, rank + 2));
 			}
 		}
 
 		if (color == BLACK && rank == RANK_7) {
 			if (!allPieces.contains(file, rank - 2)) {
-				ret |= Bitboard(file, rank - 2);
+				ret |= Bitboard(Square(file, rank - 2));
 			}
 		}
 	}
@@ -206,38 +196,38 @@ Bitboard MoveEval::getPawnMoves(Color color, RankAndFile::Enum raf) const
 }
 
 // TODO: en-passant
-Bitboard MoveEval::getPawnAttacks(Color color, RankAndFile::Enum raf) const
+Bitboard MoveEval::getPawnAttacks(Color color, Square idx) const
 {
 	Bitboard ret;
 
-	int rank = BoardUtils::getRank(raf);
-	int file = BoardUtils::getFile(raf);
+	int rank = idx.getRank();
+	int file = idx.getFile();
 	int dir = color == WHITE ? +1 : -1;
 
 	// Can capture a left diagonal piece?
 	if (file > FILE_A) {
-		ret |= Bitboard(file - 1, rank + dir);
+		ret |= Bitboard(Square(file - 1, rank + dir));
 	}
 
 	// Can capture a right diagonal piece?
 	if (file < FILE_H) {
-		ret |= Bitboard(file + 1, rank + dir);
+		ret |= Bitboard(Square(file + 1, rank + dir));
 	}
 
 	return ret;
 }
 
-Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
+Bitboard MoveEval::getRookMoves(Square idx) const
 {
 	Bitboard ret;
 
-	int rank = BoardUtils::getRank(raf);
-	int file = BoardUtils::getFile(raf);
+	int rank = idx.getRank();
+	int file = idx.getFile();
 
 	// Right movement
 	for (int i = 1; file + i <= FILE_H; ++i) {
 
-		Bitboard dst(file + i, rank);
+		Bitboard dst(Square(file + i, rank));
 		ret |= dst;
 
 		// Blocked by something?
@@ -249,7 +239,7 @@ Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
 	// Left movement
 	for (int i = 1; file - i >= FILE_A; ++i) {
 
-		Bitboard dst(file - i, rank);
+		Bitboard dst(Square(file - i, rank));
 		ret |= dst;
 
 		// Blocked by something?
@@ -261,7 +251,7 @@ Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
 	// Upward movement
 	for (int i = 1; rank + i <= RANK_8; ++i) {
 
-		Bitboard dst(file, rank + i);
+		Bitboard dst(Square(file, rank + i));
 		ret |= dst;
 		
 		// Blocked by something?
@@ -273,7 +263,7 @@ Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
 
 	// Downward movement
 	for (int i = 1; rank - i >= RANK_1; ++i) {
-		Bitboard dst(file, rank - i);
+		Bitboard dst(Square(file, rank - i));
 		ret |= dst;
 
 		// Blocked by something?
@@ -286,41 +276,40 @@ Bitboard MoveEval::getRookMoves(RankAndFile::Enum raf) const
 	return ret;
 }
 
-Bitboard MoveEval::getKnightMoves(RankAndFile::Enum raf) const
+Bitboard MoveEval::getKnightMoves(Square idx) const
 {
 	Bitboard ret;
-	uint64_t pos = static_cast<uint64_t>(1) << static_cast<uint64_t>(raf);
+	Bitboard pos(idx);
 
 	// Up 2, right 1
-	ret |= Bitboard(pos << (8*2+1)) & ~Bitboard::file(FILE_A);
+	ret |= (pos << (8*2+1)) & ~Bitboard::file(FILE_A);
 	// Up 2, left 1 
-	ret |= Bitboard(pos << (8*2-1)) & ~Bitboard::file(FILE_H);
+	ret |= (pos << (8*2-1)) & ~Bitboard::file(FILE_H);
 	// Down 2, right 1
-	ret |= Bitboard(pos >> (8*2-1)) & ~Bitboard::file(FILE_A);
+	ret |= (pos >> (8*2-1)) & ~Bitboard::file(FILE_A);
 	// Down 2, left 1
-	ret |= Bitboard(pos >> (8*2+1)) & ~Bitboard::file(FILE_H);
+	ret |= (pos >> (8*2+1)) & ~Bitboard::file(FILE_H);
 
 	// Right 2, up 1
-	ret |= Bitboard(pos << (8*1+2)) & ~(Bitboard::file(FILE_A) | Bitboard::file(FILE_B));
+	ret |= (pos << (8*1+2)) & ~(Bitboard::file(FILE_A) | Bitboard::file(FILE_B));
 	// Right 2, down 1
-	ret |= Bitboard(pos >> (8*1-2)) & ~(Bitboard::file(FILE_A) | Bitboard::file(FILE_B));
+	ret |= (pos >> (8*1-2)) & ~(Bitboard::file(FILE_A) | Bitboard::file(FILE_B));
 	// Left 2, up 1
-	ret |= Bitboard(pos << (8*1-2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
+	ret |= (pos << (8*1-2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
 	// Left 2, down 1
-	ret |= Bitboard(pos >> (8*1+2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
+	ret |= (pos >> (8*1+2)) & ~(Bitboard::file(FILE_G) | Bitboard::file(FILE_H));
 
 	return ret;
 }
 
-Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
+Bitboard MoveEval::getBishopMoves(Square idx) const
 {
 	Bitboard ret;
 	Bitboard tmp;
-
-	uint64_t pos = static_cast<uint64_t>(1) << static_cast<uint64_t>(raf);
+	Bitboard pos(idx);
 
 	// Up left diagonal
-	tmp = Bitboard(pos);
+	tmp = pos;
 	while (tmp) {
 		tmp = (tmp << (8-1)) & ~Bitboard::file(FILE_H);
 		ret |= tmp;
@@ -330,7 +319,7 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 	}
 
 	// Up right diagonal
-	tmp = Bitboard(pos);
+	tmp = pos;
 	while (tmp) {
 		tmp = (tmp << (8+1)) & ~Bitboard::file(FILE_A);
 		ret |= tmp;
@@ -339,7 +328,7 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 	}
 
 	// Down left diagonal
-	tmp = Bitboard(pos);
+	tmp = pos;
 	while (tmp) {
 		tmp = (tmp >> (8-1)) & ~Bitboard::file(FILE_A);
 		ret |= tmp;
@@ -348,7 +337,7 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 	}
 
 	// Down right diagonal
-	tmp = Bitboard(pos);
+	tmp = pos;
 	while (tmp) {
 		tmp = (tmp >> (8+1)) & ~Bitboard::file(FILE_H);
 		ret |= tmp;
@@ -359,38 +348,38 @@ Bitboard MoveEval::getBishopMoves(RankAndFile::Enum raf) const
 	return ret;
 }
 
-Bitboard MoveEval::getQueenMoves(RankAndFile::Enum raf) const
+Bitboard MoveEval::getQueenMoves(Square idx) const
 {
 	Bitboard ret;
 
-	ret |= getBishopMoves(raf);
-	ret |= getRookMoves(raf);
+	ret |= getBishopMoves(idx);
+	ret |= getRookMoves(idx);
 
 	return ret;
 }
 
 /// TODO: Castling
-Bitboard MoveEval::getKingMoves(Color color, RankAndFile::Enum raf) const
+Bitboard MoveEval::getKingMoves(Square idx) const
 {
 	Bitboard ret;
-	uint64_t pos = static_cast<uint64_t>(1) << static_cast<uint64_t>(raf);
+	Bitboard pos(idx);
 
 	// Up
-	ret |= Bitboard(pos << 8); // will truncate if we're at top rank
+	ret |= (pos << 8); // will truncate if we're at top rank
 	// Down
-	ret |= Bitboard(pos >> 8); // will truncate if we're at bottom rank
+	ret |= (pos >> 8); // will truncate if we're at bottom rank
 	// Left
-	ret |= Bitboard(pos >> 1) & ~Bitboard::file(FILE_H);
+	ret |= (pos >> 1) & ~Bitboard::file(FILE_H);
 	// Right
-	ret |= Bitboard(pos << 1) & ~Bitboard::file(FILE_A);
+	ret |= (pos << 1) & ~Bitboard::file(FILE_A);
 	// Up Left
-	ret |= Bitboard(pos << (8-1)) & ~Bitboard::file(FILE_H);
+	ret |= (pos << (8-1)) & ~Bitboard::file(FILE_H);
 	// Up Right
-	ret |= Bitboard(pos << (8+1)) & ~Bitboard::file(FILE_A);
+	ret |= (pos << (8+1)) & ~Bitboard::file(FILE_A);
 	// Down Left
-	ret |= Bitboard(pos >> (8+1)) & ~Bitboard::file(FILE_H);
+	ret |= (pos >> (8+1)) & ~Bitboard::file(FILE_H);
 	// Down Right
-	ret |= Bitboard(pos >> (8-1)) & ~Bitboard::file(FILE_A);
+	ret |= (pos >> (8-1)) & ~Bitboard::file(FILE_A);
 
 	return ret;
 }

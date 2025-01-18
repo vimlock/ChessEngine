@@ -1,10 +1,8 @@
 #include <catch2/catch.hpp>
 
 #include "Engine/Bitboard.h"
-#include "Engine/RankAndFile.h"
 
 using namespace vimlock;
-using namespace RankAndFile;
 
 TEST_CASE("Bitboard constructors", "[Bitboard]")
 {
@@ -14,9 +12,9 @@ TEST_CASE("Bitboard constructors", "[Bitboard]")
 	}
 
 	SECTION("Single bit constructor works") {
-		REQUIRE(Bitboard(5, 5).count() == 1);
-		REQUIRE(Bitboard(5, 5).contains(5, 5));
-		REQUIRE(Bitboard(7, 0).count() == 1);
+		REQUIRE(Bitboard(Square(5, 5)).count() == 1);
+		REQUIRE(Bitboard(Square(5, 5)).contains(5, 5));
+		REQUIRE(Bitboard(Square(7, 0)).count() == 1);
 	}
 
 	SECTION("Full constructor sets all bits") {
@@ -51,9 +49,9 @@ TEST_CASE("Bitboard ops")
 	}
 
 	SECTION("contains() works") {
-		REQUIRE(Bitboard(7, 7).contains(7,7));
-		REQUIRE(Bitboard(0, 5).contains(0,5));
-		REQUIRE(!Bitboard(5, 0).contains(0,0));
+		REQUIRE(Bitboard(Square(7, 7)).contains(7,7));
+		REQUIRE(Bitboard(Square(0, 5)).contains(0,5));
+		REQUIRE(!Bitboard(Square(5, 0)).contains(0,0));
 	}
 
 	SECTION("overlaps() works") {
@@ -67,7 +65,7 @@ TEST_CASE("Bitboard ops")
 	}
 
 	SECTION("operator | works") {
-		REQUIRE((Bitboard(2, 3) | Bitboard(3, 2)).count() == 2);
+		REQUIRE((Bitboard(Square(2, 3)) | Bitboard(Square(3, 2))).count() == 2);
 	}
 
 	SECTION("operator & work") {
@@ -83,21 +81,21 @@ TEST_CASE("Bitboard ops")
 
 TEST_CASE("Bitboard flip ranks")
 {
-	REQUIRE(Bitboard(0, 0).flipRanks().count() == 1);
-	REQUIRE(Bitboard(0, 0).flipRanks().contains(0, 7));
+	REQUIRE(Bitboard(Square(0, 0)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(0, 0)).flipRanks().contains(0, 7));
 
-	REQUIRE(Bitboard(0, 7).flipRanks().count() == 1);
-	REQUIRE(Bitboard(0, 7).flipRanks().contains(0, 0));
+	REQUIRE(Bitboard(Square(0, 7)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(0, 7)).flipRanks().contains(0, 0));
 
-	REQUIRE(Bitboard(7, 0).flipRanks().count() == 1);
-	REQUIRE(Bitboard(7, 0).flipRanks().contains(7, 7));
+	REQUIRE(Bitboard(Square(7, 0)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(7, 0)).flipRanks().contains(7, 7));
 
-	REQUIRE(Bitboard(0, 1).flipRanks().count() == 1);
-	REQUIRE(Bitboard(0, 1).flipRanks().contains(0, 6));
+	REQUIRE(Bitboard(Square(0, 1)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(0, 1)).flipRanks().contains(0, 6));
 
-	REQUIRE(Bitboard(0, 2).flipRanks().count() == 1);
-	REQUIRE(Bitboard(0, 2).flipRanks().contains(0, 5));
+	REQUIRE(Bitboard(Square(0, 2)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(0, 2)).flipRanks().contains(0, 5));
 
-	REQUIRE(Bitboard(0, 3).flipRanks().count() == 1);
-	REQUIRE(Bitboard(0, 3).flipRanks().contains(0, 4));
+	REQUIRE(Bitboard(Square(0, 3)).flipRanks().count() == 1);
+	REQUIRE(Bitboard(Square(0, 3)).flipRanks().contains(0, 4));
 }

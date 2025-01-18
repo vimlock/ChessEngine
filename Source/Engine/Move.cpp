@@ -1,12 +1,9 @@
 #include "Move.h"
-#include "Eval.h"
 
 #include <cctype>
 
 namespace vimlock
 {
-
-using namespace RankAndFile;
 
 Move::Move():
 	src(A1),
@@ -15,19 +12,19 @@ Move::Move():
 {
 }
 
-Move::Move(RankAndFile::Enum src_, RankAndFile::Enum dst_, Piece promote_):
+Move::Move(Square src_, Square dst_, Piece promote_):
 	src(src_),
 	dst(dst_),
 	promote(promote_)
 {
 }
 
-RankAndFile::Enum Move::getSource() const
+Square Move::getSource() const
 {
 	return src;
 }
 
-RankAndFile::Enum Move::getDestination() const
+Square Move::getDestination() const
 {
 	return dst;
 }
@@ -66,8 +63,8 @@ bool Move::parseLan(const std::string &str)
 		}
 	}
 
-	src = static_cast<RankAndFile::Enum>((srcFile - 'a') + (srcRank - '1') * 8);
-	dst = static_cast<RankAndFile::Enum>((dstFile - 'a') + (dstRank - '1') * 8);
+	src = Square(static_cast<uint64_t>((srcFile - 'a') + (srcRank - '1') * 8));
+	dst = Square(static_cast<uint64_t>((dstFile - 'a') + (dstRank - '1') * 8));
 
 	return true;
 }
@@ -76,19 +73,19 @@ std::string Move::toLan() const
 {
 	std::string ret;
 
-	ret += 'a' + BoardUtils::getFile(src);
-	ret += '1' + BoardUtils::getRank(src);
+	ret += 'a' + src.getFile();
+	ret += '1' + src.getRank();
 
-	ret += 'a' + BoardUtils::getFile(dst);
-	ret += '1' + BoardUtils::getRank(dst);
+	ret += 'a' + dst.getFile();
+	ret += '1' + dst.getRank();
 
 	switch (promote) {
+		case PAWN:   break;
 		case ROOK:   ret += 'r'; break;
 		case KNIGHT: ret += 'n'; break;
 		case BISHOP: ret += 'b'; break;
 		case QUEEN:  ret += 'q'; break;
-		default:
-			break;
+		case KING:   break;
 	}
 
 	return ret;

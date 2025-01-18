@@ -2,7 +2,6 @@
 #include "Engine/Eval.h"
 
 using namespace vimlock;
-using namespace RankAndFile;
 
 TEST_CASE("Pawn moves")
 {

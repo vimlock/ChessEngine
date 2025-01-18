@@ -3,7 +3,6 @@
 
 #include "Bitboard.h"
 #include "Board.h"
-#include "RankAndFile.h"
 
 namespace vimlock
 {
@@ -22,12 +21,6 @@ public:
 	/// Return bitboard of given type of pieces.
 	static Bitboard getPieces(const Board &board, Color color, Piece piece);
 
-	/// Get rank from RankAndFile (0-7).
-	static int getRank(RankAndFile::Enum raf);
-
-	/// Get file from RankAndFile (0-7).
-	static int getFile(RankAndFile::Enum raf);
-
 	/// Return color of the opposing player.
 	static Color getOpponent(Color color);
 };
@@ -45,12 +38,12 @@ public:
 	Bitboard getOppPieces() const;
 
 	/// Returns bitboard of all positions given piece can be moved to
-	Bitboard getAvailableMoves(RankAndFile::Enum raf) const;
+	Bitboard getAvailableMoves(Square idx) const;
 
 	/// Return bitboard of positions which given piece can attack to
 	/// Almost same as `getAvailableCaptures()` but differs in case of pawns
 	/// which can capture only diagonally.
-	Bitboard getAvailableCaptures(RankAndFile::Enum raf) const;
+	Bitboard getAvailableCaptures(Square idx) const;
 
 	/// Return squares which opponent is currently attacking (and where king can't be moved to).
 	Bitboard getAttackedSquares() const;
@@ -62,13 +55,13 @@ public:
 	bool isInCheck() const;
 
 private:
-	Bitboard getPawnMoves(Color color, RankAndFile::Enum raf) const;
-	Bitboard getPawnAttacks(Color color, RankAndFile::Enum raf) const;
-	Bitboard getRookMoves(RankAndFile::Enum raf) const;
-	Bitboard getKnightMoves(RankAndFile::Enum raf) const;
-	Bitboard getBishopMoves(RankAndFile::Enum raf) const;
-	Bitboard getQueenMoves(RankAndFile::Enum raf) const;
-	Bitboard getKingMoves(Color color, RankAndFile::Enum raf) const;
+	Bitboard getPawnMoves(Color color, Square idx) const;
+	Bitboard getPawnAttacks(Color color, Square idx) const;
+	Bitboard getRookMoves(Square idx) const;
+	Bitboard getKnightMoves(Square idx) const;
+	Bitboard getBishopMoves(Square idx) const;
+	Bitboard getQueenMoves(Square idx) const;
+	Bitboard getKingMoves(Square idx) const;
 
 	/// Current board state.
 	const Board &board;

@@ -2,6 +2,7 @@
 #define __BOARD_H__
 
 #include "Move.h"
+#include "Square.h"
 
 namespace vimlock
 {
@@ -65,13 +66,14 @@ public:
 	void setStandardPosition();
 
 	/// Assign a piece to given square.
-	void setSquare(RankAndFile::Enum raf, Color color, Piece piece);
+	void setSquare(Square idx, Color color, Piece piece);
+	void setSquare(RankAndFile idx, Color color, Piece piece);
 
 	/// Assign given square state
-	void setSquare(RankAndFile::Enum raf, SquareState square);
+	void setSquare(Square idx, SquareState square);
 
 	/// Return state of given square
-	SquareState getSquare(RankAndFile::Enum raf) const;
+	SquareState getSquare(Square idx) const;
 
 	/// Return state of given square
 	SquareState getSquare(int file, int rank) const;
@@ -88,7 +90,7 @@ public:
 	/// Move given piece.
 	/// Does not change current players turn.
 	/// Return false if the move was not legal.
-	bool movePiece(RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote=PAWN);
+	bool movePiece(Square src, Square dst, Piece promote=PAWN);
 
 	/// Apply given moves to board state.
 	bool applyMoves(const MoveList &moves);

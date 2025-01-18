@@ -10,12 +10,9 @@ Bitboard::Bitboard():
 {
 }
 
-Bitboard::Bitboard(int file, int rank)
+Bitboard::Bitboard(Square square)
 {
-	assert(file >= 0 && file < 8);
-	assert(rank >= 0 && rank < 8);
-
-	bits = 1ULL << (rank * 8 + file);
+	bits = 1ULL << square.getIndex();
 }
 
 Bitboard::Bitboard(uint64_t bits_):
@@ -47,7 +44,12 @@ uint64_t Bitboard::rawBits() const
 
 bool Bitboard::contains(int file, int rank) const
 {
-	return (*this & Bitboard(file, rank));
+	return *this & Bitboard(Square(file, rank));
+}
+
+bool Bitboard::contains(Square square) const
+{
+	return *this & Bitboard(square);
 }
 
 bool Bitboard::overlaps(const Bitboard &other) const

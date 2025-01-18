@@ -18,6 +18,7 @@ add_library(ChessEngineLib STATIC
 	Source/Engine/Log.cpp
 	Source/Engine/Move.cpp
 	Source/Engine/Format.cpp
+	Source/Engine/Square.cpp
 	Source/UCI/Uci.cpp
 )
 
