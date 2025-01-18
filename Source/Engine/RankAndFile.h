@@ -30,6 +30,30 @@ enum Rank
 	RANK_8
 };
 
+/// Represents type of a piece
+enum Piece
+{
+	PAWN   = 1,
+	ROOK   = 2,
+	KNIGHT = 4,
+	BISHOP = 8,
+	QUEEN  = 16,
+	KING   = 32,
+};
+
+
+enum
+{
+	PIECE_MASK =
+		PAWN   |
+		ROOK   |
+		KNIGHT |
+		BISHOP |
+		QUEEN  |
+		KING
+};
+
+
 namespace RankAndFile
 {
 

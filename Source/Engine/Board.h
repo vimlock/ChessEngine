@@ -6,29 +6,6 @@
 namespace vimlock
 {
 
-/// Represents type of a piece
-enum Piece
-{
-	PAWN   = 1,
-	ROOK   = 2,
-	KNIGHT = 4,
-	BISHOP = 8,
-	QUEEN  = 16,
-	KING   = 32,
-};
-
-
-enum
-{
-	PIECE_MASK =
-		PAWN   |
-		ROOK   |
-		KNIGHT |
-		BISHOP |
-		QUEEN  |
-		KING
-};
-
 /// Represents side of the player
 enum Color
 {
@@ -104,6 +81,9 @@ public:
 
 	/// Set current players turn
 	void setCurrent(Color color);
+
+	/// Set current player from white to black and vice versa.
+	void flipCurrent();
 
 	/// Move given piece.
 	/// Does not change current players turn.

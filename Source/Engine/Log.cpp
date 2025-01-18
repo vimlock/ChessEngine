@@ -1,6 +1,7 @@
 #include "Log.h"
 
 #include <fstream>
+#include <iostream>
 
 namespace vimlock
 {
@@ -25,11 +26,13 @@ public:
 void logInfo(const std::string &msg)
 {
 	Logger::instance().stream << "[info]  " << msg << std::endl;
+	std::cerr << "[info]  " << msg << std::endl;
 }
 
 void logError(const std::string &msg)
 {
 	Logger::instance().stream << "[error] " << msg << std::endl;
+	std::cerr << "[error] " << msg << std::endl;
 }
 
 } // namespace vimlock

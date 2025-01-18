@@ -38,6 +38,7 @@ public:
 private:
 	RankAndFile::Enum src;
 	RankAndFile::Enum dst;
+	Piece promote;
 };
 
 } // namespace vimlock

@@ -143,6 +143,11 @@ Bitboard MoveEval::getAvailableCaptures(RankAndFile::Enum raf) const
 	return Bitboard();
 }
 
+const Bitboard & MoveEval::getOwnPieces() const
+{
+	return ownPieces;
+}
+
 Bitboard MoveEval::getAttackedSquares() const
 {
 	return attackedSquares;
@@ -373,46 +378,5 @@ Bitboard MoveEval::getKingMoves(Color color, RankAndFile::Enum raf) const
 	return ret;
 }
 
-PositionEval::PositionEval(const Board &board_):
-	board(board_)
-{
-}
-
-int PositionEval::getScore() const
-{
-	return getScore(WHITE) - getScore(BLACK);
-}
-
-int PositionEval::getScore(Color color) const
-{
-	int ret = 0;
-
-	// Sum raw piece values
-	for (int i = 0; i <  64; ++i) {
-		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
-
-		if (!square.isOccupied() || square.getColor() != color)
-			continue;
-
-		ret += getPieceValue(square.getPiece());
-	}
-	
-	return ret;
-}
-
-int PositionEval::getPieceValue(Piece piece) const
-{
-	switch (piece) {
-		case PAWN:   return 1000;
-		case ROOK:   return 5000;
-		case KNIGHT: return 3000;
-		case BISHOP: return 3000;
-		case QUEEN:  return 9000;
-		case KING:   return 0; // Worth nothing, and everything.
-	}
-
-	assert(false && "Should be unreachable");
-	return 0;
-}
 
 } // namespace vimlock

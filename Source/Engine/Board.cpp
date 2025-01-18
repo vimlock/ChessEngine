@@ -126,6 +126,11 @@ void Board::setCurrent(Color color)
 	current = color;
 }
 
+void Board::flipCurrent()
+{
+	setCurrent(BoardUtils::getOpponent(current));
+}
+
 bool Board::applyMoves(const MoveList &moves)
 {
 	for (const Move &it : moves) {
@@ -133,7 +138,7 @@ bool Board::applyMoves(const MoveList &moves)
 		if (!movePiece(it.getSource(), it.getDestination()))
 			return false;
 
-		setCurrent(BoardUtils::getOpponent(current));
+		flipCurrent();
 	}
 
 	return true;

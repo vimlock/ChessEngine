@@ -38,6 +38,9 @@ class MoveEval
 public:
 	MoveEval(const Board &board);
 
+	/// Return bitmask of all of our own pieces
+	const Bitboard & getOwnPieces() const;
+
 	/// Returns bitboard of all positions given piece can be moved to
 	Bitboard getAvailableMoves(RankAndFile::Enum raf) const;
 
@@ -79,22 +82,6 @@ private:
 
 	/// Squares currently threathened by opponent.
 	Bitboard attackedSquares;
-};
-
-/// Evaluate current position, taking into account piece value, king safety, etc.
-class PositionEval
-{
-public:
-	PositionEval(const Board &board);
-
-	int getScore() const;
-
-private:
-	int getScore(Color color) const;
-
-	int getPieceValue(Piece piece) const;
-
-	const Board &board;
 };
 
 } // namespace vimlock
