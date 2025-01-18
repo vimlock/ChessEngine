@@ -1,4 +1,7 @@
 #include "Board.h"
+#include "Eval.h"
+#include "Move.h"
+#include "Log.h"
 
 #include <cassert>
 
@@ -100,8 +103,6 @@ void Board::setSquare(RankAndFile::Enum raf, Color color, Piece piece)
 
 void Board::setSquare(RankAndFile::Enum raf, Square square)
 {
-	assert(raf >= 0 && raf < 64);
-
 	squares[raf] = square;
 }
 
@@ -123,6 +124,34 @@ Color Board::getCurrent() const
 void Board::setCurrent(Color color)
 {
 	current = color;
+}
+
+bool Board::applyMoves(const MoveList &moves)
+{
+	for (const Move &it : moves) {
+
+		if (!movePiece(it.getSource(), it.getDestination()))
+			return false;
+
+		setCurrent(BoardUtils::getOpponent(current));
+	}
+
+	return true;
+}
+
+/// TODO: Currently this allows capturing our own pieces
+bool Board::movePiece(RankAndFile::Enum src, RankAndFile::Enum dst)
+{
+	Square tmp = getSquare(src);
+	if (!tmp.isOccupied()) {
+		logError("Source square is not occupied");
+		return false;
+	}
+
+	setSquare(dst, tmp);
+	setSquare(src, Square());
+
+	return true;
 }
 
 } // namespace vimlock

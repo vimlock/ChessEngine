@@ -1,7 +1,7 @@
 #ifndef __BOARD_H__
 #define __BOARD_H__
 
-#include "RankAndFile.h"
+#include "Move.h"
 
 namespace vimlock
 {
@@ -104,6 +104,14 @@ public:
 
 	/// Set current players turn
 	void setCurrent(Color color);
+
+	/// Move given piece.
+	/// Does not change current players turn.
+	/// Return false if the move was not legal.
+	bool movePiece(RankAndFile::Enum src, RankAndFile::Enum dst);
+
+	/// Apply given moves to board state.
+	bool applyMoves(const MoveList &moves);
 
 private:
 

@@ -10,10 +10,12 @@ project(
 	LANGUAGES CXX
 )
 
-add_library(ChessEngineLib
+add_library(ChessEngineLib STATIC
 	Source/Engine/Bitboard.cpp
 	Source/Engine/Board.cpp
+	Source/Engine/Engine.cpp
 	Source/Engine/Eval.cpp
+	Source/Engine/Log.cpp
 	Source/Engine/Move.cpp
 	Source/Engine/Format.cpp
 	Source/UCI/Uci.cpp

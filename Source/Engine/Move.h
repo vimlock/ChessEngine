@@ -9,6 +9,10 @@
 namespace vimlock
 {
 
+class Move;
+
+using MoveList = std::vector<Move>;
+
 struct Move
 {
 public:

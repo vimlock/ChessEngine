@@ -27,6 +27,9 @@ public:
 
 	/// Get file from RankAndFile (0-7).
 	static int getFile(RankAndFile::Enum raf);
+
+	/// Return color of the opposing player.
+	static Color getOpponent(Color color);
 };
 
 /// Evaluate board state for available moves
@@ -58,8 +61,6 @@ private:
 	Bitboard getQueenMoves(RankAndFile::Enum raf) const;
 	Bitboard getKingMoves(Color color, RankAndFile::Enum raf) const;
 
-	/// Return color of the opposing player.
-	Color getOpponent(Color color) const;
 
 	/// Current board state.
 	const Board &board;

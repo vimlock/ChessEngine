@@ -1,30 +1,20 @@
-#include "Engine/Board.h"
-#include "Engine/Format.h"
-#include "Engine/Eval.h"
+#include "Engine/Engine.h"
+#include "UCI/Uci.h"
 
 #include <iostream>
 
 using namespace vimlock;
-using namespace RankAndFile;
 
 int main(int argc, const char *argv[])
 {
-	Board board;
+	// BoardTerminalFormatter fmt;
+	// fmt.setBoard(board);
+	// fmt.setBitboard(bb);
+	
+	Engine engine;
 
-	std::cout << toString(board) << std::endl;
+	Uci uci{engine};
+	uci.main();
 
-	std::cout << std::endl;
-
-	board.setStandardPosition();
-
-	MoveEval eval(board);
-	Bitboard bb = eval.getAttackedSquares();
-
-	BoardTerminalFormatter fmt;
-	fmt.setBoard(board);
-	fmt.setBitboard(bb);
-
-	std::cout << fmt.toString() << std::endl;
-
-	std::cout << toString(bb);
+	return 0;
 }

@@ -54,11 +54,22 @@ int BoardUtils::getFile(RankAndFile::Enum raf)
 	return static_cast<int>(raf) % 8;
 }
 
+Color BoardUtils::getOpponent(Color color)
+{
+	assert(color == WHITE || color == BLACK);
+
+	if (color == WHITE)
+		return BLACK;
+	else
+		return WHITE;
+}
+
+
 MoveEval::MoveEval(const Board &board_):
 	board(board_)
 {
 	ownPieces = BoardUtils::getPieces(board, board.getCurrent());
-	oppPieces = BoardUtils::getPieces(board, getOpponent(board.getCurrent()));
+	oppPieces = BoardUtils::getPieces(board, BoardUtils::getOpponent(board.getCurrent()));
 	allPieces = ownPieces | oppPieces;
 	ownKing = BoardUtils::getPieces(board, board.getCurrent(), KING);
 
@@ -68,16 +79,6 @@ MoveEval::MoveEval(const Board &board_):
 			attackedSquares |= getAvailableCaptures(static_cast<RankAndFile::Enum>(i));
 		}
 	}
-}
-
-Color MoveEval::getOpponent(Color color) const
-{
-	assert(color == WHITE || color == BLACK);
-
-	if (color == WHITE)
-		return BLACK;
-	else
-		return WHITE;
 }
 
 Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
