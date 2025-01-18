@@ -91,7 +91,7 @@ void Engine::traverse(Node *node)
 	Bitboard ownPieces = eval.getOwnPieces();
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		if ((ownPieces & Bitboard(static_cast<uint64_t>(1)) << i).empty())
+		if (ownPieces & Bitboard(static_cast<uint64_t>(1)) << i)
 			continue;
 
 		Bitboard moves = eval.getAvailableMoves(static_cast<RankAndFile::Enum>(i));
@@ -102,7 +102,7 @@ void Engine::traverse(Node *node)
 			Bitboard dstBitboard = Bitboard(static_cast<uint64_t>(1) << k);
 
 			// Not a valid move?
-			if ((moves & dstBitboard).empty())
+			if (!(moves & dstBitboard))
 				continue;
 
 			if (node->childCount >= Node::maxChildren)
@@ -113,7 +113,7 @@ void Engine::traverse(Node *node)
 
 			Piece piece = node->board.getSquare(srcSquare).getPiece();
 
-			if (piece == PAWN && !(dstBitboard & (Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1))).empty()) {
+			if (piece == PAWN && (dstBitboard & (Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1)))) {
 				// Add possible promotions
 				addChildNode(node, srcSquare, dstSquare, ROOK);
 				addChildNode(node, srcSquare, dstSquare, KNIGHT);
@@ -209,7 +209,7 @@ int Engine::getScore(Node *node, const MoveEval &eval, Color color) const
 
 	// Sum raw piece values
 	for (int i = 0; i <  64; ++i) {
-		Square square = node->board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = node->board.getSquare(static_cast<RankAndFile::Enum>(i));
 
 		if (!square.isOccupied() || square.getColor() != color)
 			continue;

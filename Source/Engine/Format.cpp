@@ -45,7 +45,7 @@ void BoardTerminalFormatter::setBoard(const Board &board)
 {
 	for (int rank = RANK_1; rank <= RANK_8; rank++) {
 		for (int file = FILE_A; file <= FILE_H; file++) {
-			Square square = board.getSquare(file, rank);
+			SquareState square = board.getSquare(file, rank);
 			if (square.isOccupied())
 				squares[rank][file] = ::vimlock::toString(square.getColor(), square.getPiece());
 			else
@@ -115,7 +115,7 @@ std::string toString(const Board &board)
 		ret += std::to_string(rank + 1);
 
 		for (int file = 0; file < 8; file++) {
-			Square square = board.getSquare(file, rank);
+			SquareState square = board.getSquare(file, rank);
 			if (square.isOccupied())
 				ret += toString(square.getColor(), square.getPiece());
 			else

@@ -20,14 +20,14 @@ enum
 
 /// Represents state of a single square on the board.
 /// Square can be either unoccupied, or contain a piece+color.
-class Square
+class SquareState
 {
 public:
 	/// Construct an empty square.
-	Square();
+	SquareState();
 
 	/// Construct a square with a piece occcupying it.
-	Square(Color color, Piece piece);
+	SquareState(Color color, Piece piece);
 
 	/// Returns true if this square has a piece.
 	bool isOccupied() const;
@@ -68,13 +68,13 @@ public:
 	void setSquare(RankAndFile::Enum raf, Color color, Piece piece);
 
 	/// Assign given square state
-	void setSquare(RankAndFile::Enum raf, Square square);
+	void setSquare(RankAndFile::Enum raf, SquareState square);
 
 	/// Return state of given square
-	Square getSquare(RankAndFile::Enum raf) const;
+	SquareState getSquare(RankAndFile::Enum raf) const;
 
 	/// Return state of given square
-	Square getSquare(int file, int rank) const;
+	SquareState getSquare(int file, int rank) const;
 
 	/// Return current players turn.
 	Color getCurrent() const;
@@ -94,9 +94,8 @@ public:
 	bool applyMoves(const MoveList &moves);
 
 private:
-
 	/// State of all the squares on the board.
-	Square squares[64];
+	SquareState squares[64];
 
 	/// Current players turn.
 	Color current = WHITE;

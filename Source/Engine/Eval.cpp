@@ -12,7 +12,7 @@ Bitboard BoardUtils::getPieces(const Board &board, Color color)
 	Bitboard ret;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
 		ret |= Bitboard(((square.getBits() & color) ? 1ULL : 0ULL) << i);
 	}
 
@@ -24,7 +24,7 @@ Bitboard BoardUtils::getPieces(const Board &board, Piece piece)
 	Bitboard ret;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
 		ret |= Bitboard(((square.getBits() & piece) ? 1ULL : 0ULL) << i);
 	}
 
@@ -37,7 +37,7 @@ Bitboard BoardUtils::getPieces(const Board &board, Color color, Piece piece)
 	uint8_t mask  = color | piece;
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		Square square = board.getSquare(static_cast<RankAndFile::Enum>(i));
+		SquareState square = board.getSquare(static_cast<RankAndFile::Enum>(i));
 		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
 	}
 
@@ -90,7 +90,7 @@ MoveEval::MoveEval(const Board &board_):
 
 Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
 {
-	Square square = board.getSquare(raf);
+	SquareState square = board.getSquare(raf);
 	Bitboard ret;
 
 	switch (square.getPiece()) {
@@ -129,7 +129,7 @@ Bitboard MoveEval::getAvailableMoves(RankAndFile::Enum raf) const
 
 Bitboard MoveEval::getAvailableCaptures(RankAndFile::Enum raf) const
 {
-	Square square = board.getSquare(raf);
+	SquareState square = board.getSquare(raf);
 
 	switch (square.getPiece()) {
 		case PAWN:

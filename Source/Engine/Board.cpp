@@ -8,34 +8,34 @@
 namespace vimlock
 {
 
-Square::Square():
+SquareState::SquareState():
 	bits(0)
 {
 }
 
-Square::Square(Color color, Piece piece):
+SquareState::SquareState(Color color, Piece piece):
 	bits(color | piece)
 {
 }
 
-bool Square::isOccupied() const
+bool SquareState::isOccupied() const
 {
 	return bits & PIECE_MASK;
 }
 
-Color Square::getColor() const
+Color SquareState::getColor() const
 {
 	assert(isOccupied());
 	return static_cast<Color>(bits & COLOR_MASK);
 }
 
-Piece Square::getPiece() const
+Piece SquareState::getPiece() const
 {
 	assert(isOccupied());
 	return static_cast<Piece>(bits & PIECE_MASK);
 }
 
-uint8_t Square::getBits() const
+uint8_t SquareState::getBits() const
 {
 	return bits;
 }
@@ -47,7 +47,7 @@ Board::Board()
 void Board::clear()
 {
 	for (int i = 0; i < 64; ++i)
-		squares[i] = Square();
+		squares[i] = SquareState();
 }
 
 void Board::setStandardPosition()
@@ -98,20 +98,20 @@ void Board::setStandardPosition()
 
 void Board::setSquare(RankAndFile::Enum raf, Color color, Piece piece)
 {
-	setSquare(raf, Square(color, piece));
+	setSquare(raf, SquareState(color, piece));
 }
 
-void Board::setSquare(RankAndFile::Enum raf, Square square)
+void Board::setSquare(RankAndFile::Enum raf, SquareState square)
 {
 	squares[raf] = square;
 }
 
-Square Board::getSquare(RankAndFile::Enum raf) const
+SquareState Board::getSquare(RankAndFile::Enum raf) const
 {
 	return squares[raf];
 }
 
-Square Board::getSquare(int file, int rank) const
+SquareState Board::getSquare(int file, int rank) const
 {
 	return getSquare(static_cast<RankAndFile::Enum>(rank * 8 + file));
 }
@@ -147,18 +147,18 @@ bool Board::applyMoves(const MoveList &moves)
 /// TODO: Currently this allows capturing our own pieces
 bool Board::movePiece(RankAndFile::Enum src, RankAndFile::Enum dst, Piece promote)
 {
-	Square tmp = getSquare(src);
+	SquareState tmp = getSquare(src);
 	if (!tmp.isOccupied()) {
 		logError("Source square is not occupied");
 		return false;
 	}
 
 	if (promote != PAWN) {
-		tmp = Square(tmp.getColor(), promote);
+		tmp = SquareState(tmp.getColor(), promote);
 	}
 
 	setSquare(dst, tmp);
-	setSquare(src, Square());
+	setSquare(src, SquareState());
 
 	return true;
 }
