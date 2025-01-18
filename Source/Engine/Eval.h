@@ -22,10 +22,10 @@ public:
 	/// Return bitboard of given type of pieces.
 	static Bitboard getPieces(const Board &board, Color color, Piece piece);
 
-	/// Get rank from RankAndFile
+	/// Get rank from RankAndFile (0-7).
 	static int getRank(RankAndFile::Enum raf);
 
-	/// Get file from RankAndFile
+	/// Get file from RankAndFile (0-7).
 	static int getFile(RankAndFile::Enum raf);
 };
 

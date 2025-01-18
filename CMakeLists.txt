@@ -14,7 +14,9 @@ add_library(ChessEngineLib
 	Source/Engine/Bitboard.cpp
 	Source/Engine/Board.cpp
 	Source/Engine/Eval.cpp
+	Source/Engine/Move.cpp
 	Source/Engine/Format.cpp
+	Source/UCI/Uci.cpp
 )
 
 target_include_directories(ChessEngineLib PUBLIC Source)
@@ -29,5 +31,6 @@ add_executable(RunTests
 	Tests/Main.cpp
 	Tests/TestBitboard.cpp
 	Tests/TestEval.cpp
+	Tests/TestMove.cpp
 )
 target_link_libraries(RunTests PRIVATE ChessEngineLib)
