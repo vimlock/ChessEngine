@@ -12,15 +12,6 @@ class Board;
 class BoardUtils
 {
 public:
-	/// Return bitboard of all pieces for given color.
-	static Bitboard getPieces(const Board &board, Color color);
-
-	/// Return bitboard of given type of pieces.
-	static Bitboard getPieces(const Board &board, Piece piece);
-
-	/// Return bitboard of given type of pieces.
-	static Bitboard getPieces(const Board &board, Color color, Piece piece);
-
 	/// Return color of the opposing player.
 	static Color getOpponent(Color color);
 };
@@ -38,6 +29,9 @@ public:
 	Bitboard getOppPieces() const;
 
 	/// Returns bitboard of all positions given piece can be moved to
+	///
+	/// NOTE: none of these functions test for check or castling, that is handled
+	/// when searching through available nodes
 	Bitboard getAvailableMoves(Square idx) const;
 
 	/// Return bitboard of positions which given piece can attack to
@@ -58,6 +52,15 @@ public:
 	bool isInCheck() const;
 
 private:
+	/// Return bitboard of all pieces for given color.
+	Bitboard getPieces(Color color) const;
+
+	/// Return bitboard of given type of pieces.
+	Bitboard getPieces(Piece piece) const;
+
+	/// Return bitboard of given type of pieces.
+	Bitboard getPieces(Color color, Piece piece) const;
+
 	Bitboard getPawnMoves(Color color, Square idx) const;
 	Bitboard getPawnAttacks(Color color, Square idx) const;
 	Bitboard getRookMoves(Square idx) const;

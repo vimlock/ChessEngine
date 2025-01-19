@@ -133,6 +133,8 @@ void Engine::traverse(Node *node)
 				// Regular move
 				addChildNode(node, srcSquare, dstSquare);
 			}
+
+			// TODO: consider castling
 		}
 	}
 

@@ -7,43 +7,6 @@
 namespace vimlock
 {
 
-Bitboard BoardUtils::getPieces(const Board &board, Color color)
-{
-	Bitboard ret;
-
-	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(Square(i));
-		ret |= Bitboard(((square.getBits() & color) ? 1ULL : 0ULL) << i);
-	}
-
-	return ret;
-}
-
-Bitboard BoardUtils::getPieces(const Board &board, Piece piece)
-{
-	Bitboard ret;
-
-	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(Square(i));
-		ret |= Bitboard(((square.getBits() & piece) ? 1ULL : 0ULL) << i);
-	}
-
-	return ret;
-}
-
-Bitboard BoardUtils::getPieces(const Board &board, Color color, Piece piece)
-{
-	Bitboard ret;
-	uint8_t mask  = color | piece;
-
-	for (uint64_t i = 0; i < 64; ++i) {
-		SquareState square = board.getSquare(Square(i));
-		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
-	}
-
-	return ret;
-}
-
 Color BoardUtils::getOpponent(Color color)
 {
 	assert(color == WHITE || color == BLACK);
@@ -58,10 +21,10 @@ Color BoardUtils::getOpponent(Color color)
 MoveEval::MoveEval(const Board &board_, Color color):
 	board(board_)
 {
-	ownPieces = BoardUtils::getPieces(board, color);
-	oppPieces = BoardUtils::getPieces(board, BoardUtils::getOpponent(color));
+	ownPieces = getPieces(color);
+	oppPieces = getPieces(BoardUtils::getOpponent(color));
 	allPieces = ownPieces | oppPieces;
-	ownKing = BoardUtils::getPieces(board, color, KING);
+	ownKing = getPieces(color, KING);
 
 	// Cache squares where opponent is attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
@@ -111,8 +74,6 @@ Bitboard MoveEval::getAvailableMoves(Square idx) const
 			break;
 		case KING:
 			ret = getKingMoves(idx);
-			// Exclude squares which would put us in check.
-			ret = ret & ~attackedSquares;
 			break;
 		default:
 			assert(false && "Should be unreachable");
@@ -147,6 +108,44 @@ Bitboard MoveEval::getAvailableCaptures(Square idx) const
 	return Bitboard();
 }
 
+
+Bitboard MoveEval::getPieces(Color color) const
+{
+	Bitboard ret;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = board.getSquare(Square(i));
+		ret |= Bitboard(((square.getBits() & color) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
+Bitboard MoveEval::getPieces(Piece piece) const
+{
+	Bitboard ret;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = board.getSquare(Square(i));
+		ret |= Bitboard(((square.getBits() & piece) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
+Bitboard MoveEval::getPieces(Color color, Piece piece) const
+{
+	Bitboard ret;
+	uint8_t mask  = color | piece;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = board.getSquare(Square(i));
+		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
 Bitboard MoveEval::getOwnPieces() const
 {
 	return ownPieces;
@@ -174,7 +173,7 @@ Bitboard MoveEval::getOwnAllAvailableMoves() const
 
 bool MoveEval::isInCheck() const
 {
-	return attackedSquares.overlaps(ownKing);
+	return attackedSquares & ownKing;
 }
 
 Bitboard MoveEval::getPawnMoves(Color color, Square idx) const
@@ -243,7 +242,7 @@ Bitboard MoveEval::getRookMoves(Square idx) const
 		ret |= dst;
 
 		// Blocked by something?
-		if (allPieces.overlaps(dst)) {
+		if (allPieces & dst) {
 			break;
 		}
 	}
@@ -255,7 +254,7 @@ Bitboard MoveEval::getRookMoves(Square idx) const
 		ret |= dst;
 
 		// Blocked by something?
-		if (allPieces.overlaps(dst)) {
+		if (allPieces & dst) {
 			break;
 		}
 	}
@@ -267,7 +266,7 @@ Bitboard MoveEval::getRookMoves(Square idx) const
 		ret |= dst;
 		
 		// Blocked by something?
-		if (allPieces.overlaps(dst)) {
+		if (allPieces & dst) {
 			break;
 		}
 
@@ -279,7 +278,7 @@ Bitboard MoveEval::getRookMoves(Square idx) const
 		ret |= dst;
 
 		// Blocked by something?
-		if (allPieces.overlaps(dst)) {
+		if (allPieces & dst) {
 			break;
 		}
 
@@ -370,7 +369,6 @@ Bitboard MoveEval::getQueenMoves(Square idx) const
 	return ret;
 }
 
-/// TODO: Castling
 Bitboard MoveEval::getKingMoves(Square idx) const
 {
 	Bitboard ret;

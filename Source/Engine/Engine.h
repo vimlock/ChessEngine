@@ -41,7 +41,7 @@ struct Node
 	/// Move which led to this node
 	Square dst;
 
-	/// If the move promoted to something.
+	/// Set if the move leading to this position was a promotion.
 	Piece promote;
 
 	/// Evaluation at this point.
