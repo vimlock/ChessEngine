@@ -88,6 +88,7 @@ void Uci::onGo(const std::string &line)
 	logInfo("best move:    " + e.best.toLan());
 	logInfo("eval:         " + std::to_string(e.eval));
 	logInfo("continuation: " + e.continuation.toLan());
+	logInfo("total:        " + std::to_string(e.total));
 }
 
 void Uci::onUciNewGame(const std::string &line)

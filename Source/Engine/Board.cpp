@@ -1,6 +1,6 @@
 #include "Board.h"
+#include "Moves.h"
 #include "Eval.h"
-#include "Format.h"
 #include "Log.h"
 
 namespace vimlock
@@ -140,6 +140,15 @@ bool Board::canCastle(Square dst) const
 
 	assert(false && "Should be unreachable");
 	return false;
+}
+
+Bitboard Board::getMoves(Square idx) const
+{
+	Bitboard allPieces = getPieces();
+	SquareState square = getSquare(idx);
+	Bitboard ownPieces = getPieces(square.getColor());
+
+	return getAvailableMoves(square.getColor(), square.getPiece(), idx, allPieces, ownPieces);
 }
 
 } // namespace vimlock

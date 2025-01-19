@@ -152,3 +152,45 @@ TEST_CASE("Castling")
 		}
 	}
 }
+
+TEST_CASE("Promoting works")
+{
+	Board board;
+
+	SECTION("To rook") {
+		board.setSquare(A8, BLACK, ROOK);
+		board.setSquare(B7, WHITE, PAWN);
+
+		REQUIRE(board.movePiece(B7, A8, ROOK));
+		REQUIRE(board.getSquare(A8).getPiece() == ROOK);
+		REQUIRE(board.getSquare(A8).getColor() == WHITE);
+	}
+
+	SECTION("To knight") {
+		board.setSquare(A8, BLACK, ROOK);
+		board.setSquare(B7, WHITE, PAWN);
+
+		REQUIRE(board.movePiece(B7, A8, KNIGHT));
+		REQUIRE(board.getSquare(A8).getPiece() == KNIGHT);
+		REQUIRE(board.getSquare(A8).getColor() == WHITE);
+	}
+
+	SECTION("To bishop") {
+		board.setSquare(A8, BLACK, ROOK);
+		board.setSquare(B7, WHITE, PAWN);
+
+		REQUIRE(board.movePiece(B7, A8, BISHOP));
+		REQUIRE(board.getSquare(A8).getPiece() == BISHOP);
+		REQUIRE(board.getSquare(A8).getColor() == WHITE);
+	}
+
+	SECTION("To queen") {
+		board.setSquare(A8, BLACK, ROOK);
+		board.setSquare(B7, WHITE, PAWN);
+
+		REQUIRE(board.movePiece(B7, A8, QUEEN));
+		REQUIRE(board.getSquare(A8).getPiece() == QUEEN);
+		REQUIRE(board.getSquare(A8).getColor() == WHITE);
+	}
+
+}

@@ -1,24 +1,11 @@
-#ifndef __BOARD_H__
-#define __BOARD_H__
-
+#pragma once
 #include "Move.h"
 #include "Square.h"
+#include "Enums.h"
 #include "Bitboard.h"
 
 namespace vimlock
 {
-
-/// Represents side of the player
-enum Color
-{
-	WHITE = 64,
-	BLACK = 128,
-};
-
-enum
-{
-	COLOR_MASK = WHITE | BLACK
-};
 
 /// Represents state of a single square on the board.
 /// Square can be either unoccupied, or contain a piece+color.
@@ -107,14 +94,39 @@ public:
 	/// NOTE: do not call with other squares
 	bool canCastle(Square dst) const;
 
+	/// Return bitboard of all non-empty squares.
+	Bitboard getPieces() const;
+
+	/// Return bitboard of all pieces with given color.
+	Bitboard getPieces(Color color) const;
+
+	/// Return bitboard of all squares which have given type of piece.
+	Bitboard getPieces(Piece piece) const;
+
+	/// Return bitboard of all squares with given color and type.
+	Bitboard getPieces(Color color, Piece piece) const;
+
+	/// Return moves available for given piece.
+	///
+	/// NOTE: usefull only for testing and debugging, does not cache any computed bitboards.
+	Bitboard getMoves(Square idx) const;
+
 private:
+	Bitboard getPawnMoves(Color color, Square idx) const;
+	Bitboard getPawnAttacks(Color color, Square idx) const;
+	Bitboard getRookMoves(Square idx) const;
+	Bitboard getKnightMoves(Square idx) const;
+	Bitboard getBishopMoves(Square idx) const;
+	Bitboard getQueenMoves(Square idx) const;
+	Bitboard getKingMoves(Square idx) const;
+
 	/// State of all the squares on the board.
 	SquareState squares[64];
 
 	/// Current players turn.
 	Color current = WHITE;
 
-	/// Bitmask of squares with castle rights.
+	/// Bitboard of squares with castle rights.
 	Bitboard castleRights;
 
 	// TODO: en-passant state
@@ -123,5 +135,3 @@ private:
 } // namespace vimlock
 
 #include "Board.inl"
-
-#endif // __BOARD_H__

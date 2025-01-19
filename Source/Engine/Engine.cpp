@@ -1,6 +1,7 @@
 #include "Engine.h"
 #include "Eval.h"
 #include "Move.h"
+#include "Moves.h"
 #include "Log.h"
 
 #include <cassert>
@@ -17,6 +18,8 @@ static Bitboard centerSquares = Bitboard(0x3c3c000000LL);
 
 // A and H file
 static Bitboard edges = Bitboard(0x20c0c18181818181);
+
+static Bitboard topAndBottomRanks = Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1);
 
 Move Node::getMove() const
 {
@@ -38,7 +41,8 @@ MoveList Node::getPath() const
 	return ret;
 }
 
-Engine::Engine()
+Engine::Engine(int maxDepth_):
+	maxDepth(maxDepth_)
 {
 	board.setStandardPosition();
 }
@@ -63,22 +67,29 @@ bool Engine::poll(Evaluation &ret)
 	Node *root = allocNode();
 	root->depth = 0;
 	root->board = board;
+	root->allPieces = root->board.getPieces();
+	root->ownPieces = root->board.getPieces(root->board.getCurrent());
+	root->oppPieces = root->board.getPieces(BoardUtils::getOpponent(root->board.getCurrent()));
 
-	logInfo("center", board, centerSquares);
+	total = 0;
 
 	traverse(root);
 
 	if (!root->bestChild) {
 		logError("No available move?");
+		freeNode(root);
 		return false;
 	}
 
 	ret.best = root->bestChild->getMove();
 	ret.eval = root->bestChild->eval;
+	ret.total = total;
 
 	for (Node *it = root->bestChild; it != nullptr; it = it->bestChild) {
 		ret.continuation.push_back(it->getMove());
 	}
+
+	freeNode(root);
 
 	return true;
 }
@@ -90,20 +101,22 @@ void Engine::stop()
 
 void Engine::traverse(Node *node)
 {
-	MoveEval eval(node->board, node->board.getCurrent());
-
 	if (node->depth >= maxDepth) {
 		evaluate(node);
 		return;
 	}
 
-	Bitboard ownPieces = eval.getOwnPieces();
+	Bitboard allPieces = node->allPieces;
+	Bitboard ownPieces = node->ownPieces;
 
 	for (uint64_t i = 0; i < 64; ++i) {
 		if (!(ownPieces & Bitboard(Square(i))))
 			continue;
 
-		Bitboard moves = eval.getAvailableMoves(Square(i));
+		SquareState square = node->board.getSquare(Square(i));
+
+		Bitboard moves = getAvailableMoves(
+			square.getColor(), square.getPiece(), Square(i), allPieces, ownPieces);
 
 		// Create a subnode for each possible move
 		for (uint64_t k = 0; k < 64; ++k) {
@@ -120,9 +133,7 @@ void Engine::traverse(Node *node)
 			Square srcSquare = Square(i);
 			Square dstSquare = Square(k);
 
-			Piece piece = node->board.getSquare(srcSquare).getPiece();
-
-			if (piece == PAWN && (dstBitboard & (Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1)))) {
+			if (square.getPiece() == PAWN && (dstBitboard & (topAndBottomRanks))) {
 				// Add possible promotions
 				addChildNode(node, srcSquare, dstSquare, ROOK);
 				addChildNode(node, srcSquare, dstSquare, KNIGHT);
@@ -132,10 +143,18 @@ void Engine::traverse(Node *node)
 			else {
 				// Regular move
 				addChildNode(node, srcSquare, dstSquare);
-			}
 
-			// TODO: consider castling
+				if (square.getPiece() == KING) {
+					// TODO: consider castling
+				}
+			}
 		}
+	}
+
+	// In a terminal node? Due to a checkmate, or stalemate
+	if (node->childCount == 0) {
+		evaluate(node);
+		return;
 	}
 
 	for (int i = 0; i < node->childCount; ++i) {
@@ -143,6 +162,14 @@ void Engine::traverse(Node *node)
 	}
 
 	minimax(node, board.getCurrent() == node->board.getCurrent());
+
+	// Free all but the best candidate
+	for (int i = 0; i < node->childCount; ++i) {
+		if (node->children[i] != node->bestChild) {
+			freeNode(node->children[i]);
+		}
+	}
+	node->childCount = 0;
 }
 
 void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
@@ -151,13 +178,20 @@ void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 	child->src = src;
 	child->dst = dst;
 	child->board = parent->board;
+	child->promote = promote;
 
 	if (!child->board.movePiece(child->src, child->dst, child->promote)) {
 		assert(false && "invalid move when traversing");
 	}
 
+	Bitboard allPieces = child->board.getPieces();
+	Bitboard ownPieces = child->board.getPieces(child->board.getCurrent());
+	Bitboard oppPieces = allPieces & ~ownPieces;
+	Bitboard ownKing = child->board.getPieces(child->board.getCurrent(), KING);
+	Bitboard oppAttacks = getAvailableCaptures(child->board, allPieces, oppPieces);
+
 	// Don't move into check
-	if (MoveEval(child->board, child->board.getCurrent()).isInCheck()) {
+	if (oppAttacks & ownKing) {
 		freeNode(child);
 		return;
 	}
@@ -165,6 +199,11 @@ void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 	child->board.flipCurrent();
 	child->depth = parent->depth + 1;
 	child->parent = parent;
+
+	// Flipped around as the turn changed
+	child->allPieces = allPieces;
+	child->ownPieces = oppPieces;
+	child->oppPieces = ownPieces;
 
 	parent->children[parent->childCount++] = child;
 }
@@ -183,6 +222,8 @@ void Engine::evaluate(Node *node)
 		node->board
 	);
 #endif
+
+	total++;
 }
 
 void Engine::minimax(Node *node, bool maximizing) const
@@ -280,6 +321,14 @@ Node * Engine::allocNode()
 
 void Engine::freeNode(Node *node)
 {
+	for (int i = 0; i < node->childCount; ++i) {
+		freeNode(node->children[i]);
+	}
+
+	if (node->bestChild != nullptr)
+		freeNode(node->bestChild);
+
+	delete node;
 }
 
 } // namespace vimlock

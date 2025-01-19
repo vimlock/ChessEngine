@@ -20,6 +20,9 @@ struct Evaluation
 
 	/// Best contination according to the engine.
 	MoveList continuation;
+
+	/// Total number of positions evaluated.
+	uint64_t total;
 };
 
 struct Node
@@ -50,6 +53,11 @@ struct Node
 	/// Evaluation depth at this node
 	int depth;
 
+	/// Expensive to calculate to do it once and cache the result here.
+	Bitboard allPieces;
+	Bitboard ownPieces;
+	Bitboard oppPieces;
+
 	Node *parent;
 
 	Node *bestChild;
@@ -61,7 +69,7 @@ struct Node
 class Engine
 {
 public:
-	Engine();
+	Engine(int maxDepth=5);
 
 	/// Set current board position.
 	void setPosition(const Board &board);
@@ -98,7 +106,10 @@ private:
 
 	Board board;
 	
-	int maxDepth = 4;
+	int maxDepth;
+
+	/// Statistics
+	uint64_t total = 0;
 };
 
 } // namespace vimlock

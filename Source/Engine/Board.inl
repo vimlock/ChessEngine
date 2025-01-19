@@ -76,6 +76,55 @@ inline void Board::setCurrent(Color color)
 	current = color;
 }
 
+inline Bitboard Board::getPieces() const
+{
+	Bitboard ret;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = getSquare(Square(i));
+		ret |= Bitboard((square.getBits() ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
+inline Bitboard Board::getPieces(Color color) const
+{
+	Bitboard ret;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = getSquare(Square(i));
+		ret |= Bitboard(((square.getBits() & color) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
+inline Bitboard Board::getPieces(Piece piece) const
+{
+	Bitboard ret;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = getSquare(Square(i));
+		ret |= Bitboard(((square.getBits() & piece) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
+inline Bitboard Board::getPieces(Color color, Piece piece) const
+{
+	Bitboard ret;
+	uint8_t mask  = color | piece;
+
+	for (uint64_t i = 0; i < 64; ++i) {
+		SquareState square = getSquare(Square(i));
+		ret |= Bitboard((((square.getBits() & mask) == mask) ? 1ULL : 0ULL) << i);
+	}
+
+	return ret;
+}
+
 } // namespace vimlock
 
 #endif // __BOARD_INL__

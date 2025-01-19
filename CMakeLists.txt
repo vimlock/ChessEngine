@@ -41,5 +41,6 @@ add_executable(RunTests
 	Tests/TestBitboard.cpp
 	Tests/TestEval.cpp
 	Tests/TestMove.cpp
+	Tests/TestMoves.cpp
 )
 target_link_libraries(RunTests PRIVATE ChessEngineLib)
