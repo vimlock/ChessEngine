@@ -60,6 +60,9 @@ bool Bitboard::overlaps(const Bitboard &other) const
 /// TODO: Unoptimized, there exists compiler built-in functions for this.
 int Bitboard::count() const
 {
+#if defined(__GNUC__) || defined(__clang__)
+	return __builtin_popcountll(bits);
+#else
 	int ret = 0;
 
 	for (unsigned i = 0; i < 64; ++i) {
@@ -67,6 +70,7 @@ int Bitboard::count() const
 	}
 
 	return ret;
+#endif
 }
 
 Bitboard Bitboard::inverted() const

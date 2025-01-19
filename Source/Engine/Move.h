@@ -11,8 +11,6 @@ namespace vimlock
 
 class Move;
 
-using MoveList = std::vector<Move>;
-
 struct Move
 {
 public:
@@ -35,7 +33,7 @@ public:
 	/// If parsing failed, returns false.
 	bool parseLan(const std::string &str);
 
-	/// Return string reprenting this move in long algebraic notation, e.g. "e2e4"
+	/// Return string representing this move in long algebraic notation, e.g. "e2e4"
 	std::string toLan() const;
 
 	bool operator == (Move rhs) const;
@@ -45,6 +43,13 @@ private:
 	Square src;
 	Square dst;
 	Piece promote;
+};
+
+class MoveList : public std::vector<Move>
+{
+public:
+	/// Return string representing this move list in long algebraic notation, e.g. "e2e4 e7e5 f2f5"
+	std::string toLan();
 };
 
 } // namespace vimlock

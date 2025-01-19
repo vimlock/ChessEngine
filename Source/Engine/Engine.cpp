@@ -6,27 +6,34 @@
 #include <cassert>
 #include <cstddef>
 #include <limits>
+#include <algorithm>
 #include <iostream>
 
 namespace vimlock
 {
+
+// 4x4 region in center
+static Bitboard centerSquares = Bitboard(0x3c3c000000LL);
+
+// A and H file
+static Bitboard edges = Bitboard(0x20c0c18181818181);
 
 Move Node::getMove() const
 {
 	return Move(src, dst, promote);
 }
 
-std::string Node::getPath() const
+MoveList Node::getPath() const
 {
-	std::string ret;
+	MoveList ret;
 
 	const Node *it = this;
 	while (it->parent != nullptr) {
-		if (!ret.empty())
-			ret += ' ';
-		ret += it->getMove().toLan();
+		ret.push_back(getMove());
 		it = it->parent;
 	}
+
+	std::reverse(ret.begin(), ret.end());
 
 	return ret;
 }
@@ -51,11 +58,13 @@ void Engine::start()
 	// Nothing to do now as we're still single threaded
 }
 
-bool Engine::poll(Move &ret)
+bool Engine::poll(Evaluation &ret)
 {
 	Node *root = allocNode();
 	root->depth = 0;
 	root->board = board;
+
+	logInfo("center", board, centerSquares);
 
 	traverse(root);
 
@@ -64,9 +73,12 @@ bool Engine::poll(Move &ret)
 		return false;
 	}
 
-	ret = root->bestChild->getMove();
+	ret.best = root->bestChild->getMove();
+	ret.eval = root->bestChild->eval;
 
-	logInfo("Best move: " + ret.toLan()  + " " + std::to_string(root->bestChild->eval));
+	for (Node *it = root->bestChild; it != nullptr; it = it->bestChild) {
+		ret.continuation.push_back(it->getMove());
+	}
 
 	return true;
 }
@@ -78,17 +90,17 @@ void Engine::stop()
 
 void Engine::traverse(Node *node)
 {
-	MoveEval eval(node->board);
+	MoveEval eval(node->board, node->board.getCurrent());
 
 	if (node->depth >= maxDepth) {
-		evaluate(node, eval);
+		evaluate(node);
 		return;
 	}
 
 	Bitboard ownPieces = eval.getOwnPieces();
 
 	for (uint64_t i = 0; i < 64; ++i) {
-		if (ownPieces & Bitboard(Square(i)))
+		if (!(ownPieces & Bitboard(Square(i))))
 			continue;
 
 		Bitboard moves = eval.getAvailableMoves(Square(i));
@@ -128,7 +140,7 @@ void Engine::traverse(Node *node)
 		traverse(node->children[i]);
 	}
 
-	minimax(node, board.getCurrent() != node->board.getCurrent());
+	minimax(node, board.getCurrent() == node->board.getCurrent());
 }
 
 void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
@@ -143,7 +155,7 @@ void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 	}
 
 	// Don't move into check
-	if (MoveEval(child->board).isInCheck()) {
+	if (MoveEval(child->board, child->board.getCurrent()).isInCheck()) {
 		freeNode(child);
 		return;
 	}
@@ -155,18 +167,18 @@ void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 	parent->children[parent->childCount++] = child;
 }
 
-void Engine::evaluate(Node *node, const MoveEval &eval)
+void Engine::evaluate(Node *node)
 {
-	int own = getScore(node, eval, WHITE);
-	int opp = getScore(node, eval, BLACK);
+	int own = getScore(node->board, board.getCurrent());
+	int opp = getScore(node->board, BoardUtils::getOpponent(board.getCurrent()));
 
 	node->eval = own - opp;
 
-#if 0
-	logInfo("eval " + node->getPath() + " " +
+	logInfo("eval " + node->getPath().toLan() + " " +
 			std::to_string(own) + " - " + std::to_string(opp) +
-			" = " + std::to_string(node->eval));
-#endif
+			" = " + std::to_string(node->eval),
+		node->board
+	);
 }
 
 void Engine::minimax(Node *node, bool maximizing) const
@@ -200,13 +212,15 @@ void Engine::minimax(Node *node, bool maximizing) const
 	node->eval = eval;
 }
 
-int Engine::getScore(Node *node, const MoveEval &eval, Color color) const
+int Engine::getScore(const Board &board, Color color) const
 {
+	MoveEval eval(board, color);
+
 	int ret = 0;
 
 	// Sum raw piece values
 	for (int i = 0; i <  64; ++i) {
-		SquareState square = node->board.getSquare(Square(i));
+		SquareState square = board.getSquare(Square(i));
 
 		if (!square.isOccupied() || square.getColor() != color)
 			continue;
@@ -218,11 +232,15 @@ int Engine::getScore(Node *node, const MoveEval &eval, Color color) const
 		ret -= 500;
 	}
 
-	// Controlling more squares is good, I think?
-	ret += eval.getAttackingSquares().count() * 10;
+	// Piece mobility is good.
+	ret += eval.getOwnAllAvailableMoves().count() * 100;
 
 	// Even better if we're actually targetting something.
-	ret += (eval.getOppPieces() & eval.getAttackingSquares()).count() * 10;
+	ret += (eval.getOppPieces() & eval.getAttackingSquares()).count() * 100;
+
+	// Holding center is good
+	ret += (centerSquares & eval.getAttackingSquares()).count() * 100;
+	ret += (centerSquares & eval.getOwnPieces()).count() * 100;
 
 	return ret;
 }

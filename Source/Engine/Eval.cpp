@@ -55,25 +55,32 @@ Color BoardUtils::getOpponent(Color color)
 }
 
 
-MoveEval::MoveEval(const Board &board_):
+MoveEval::MoveEval(const Board &board_, Color color):
 	board(board_)
 {
-	ownPieces = BoardUtils::getPieces(board, board.getCurrent());
-	oppPieces = BoardUtils::getPieces(board, BoardUtils::getOpponent(board.getCurrent()));
+	ownPieces = BoardUtils::getPieces(board, color);
+	oppPieces = BoardUtils::getPieces(board, BoardUtils::getOpponent(color));
 	allPieces = ownPieces | oppPieces;
-	ownKing = BoardUtils::getPieces(board, board.getCurrent(), KING);
+	ownKing = BoardUtils::getPieces(board, color, KING);
 
 	// Cache squares where opponent is attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
-		if (oppPieces & (Bitboard(1) << i)) {
+		if (oppPieces & (Bitboard(Square(i)))) {
 			attackedSquares |= getAvailableCaptures(Square(i));
 		}
 	}
 
 	// Cache squares where we are attacking.
 	for (uint64_t i = 0; i < 64; ++i) {
-		if (ownPieces & (Bitboard(1) << i)) {
+		if (ownPieces & (Bitboard(Square(i)))) {
 			attackingSquares |= getAvailableCaptures(Square(i));
+		}
+	}
+
+	// Cache squares where we can move to
+	for (uint64_t i = 0; i < 64; ++i) {
+		if (ownPieces & (Bitboard(Square(i)))) {
+			ownAvailableMoves |= getAvailableMoves(Square(i));
 		}
 	}
 }
@@ -158,6 +165,11 @@ Bitboard MoveEval::getAttackedSquares() const
 Bitboard MoveEval::getAttackingSquares() const
 {
 	return attackingSquares;
+}
+
+Bitboard MoveEval::getOwnAllAvailableMoves() const
+{
+	return ownAvailableMoves;
 }
 
 bool MoveEval::isInCheck() const

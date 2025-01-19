@@ -120,4 +120,17 @@ bool Move::operator != (Move rhs) const
 	return false;
 }
 
+std::string MoveList::toLan()
+{
+	std::string ret;
+
+	for (const Move &it : *this) {
+		if (!ret.empty())
+			ret += ' ';
+		ret += it.toLan();
+	}
+
+	return ret;
+}
+
 } // namespace vimlock

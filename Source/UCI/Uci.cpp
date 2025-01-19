@@ -3,7 +3,6 @@
 #include "Engine/Engine.h"
 #include "Engine/Move.h"
 #include "Engine/Log.h"
-#include "Engine/Format.h"
 
 #include <iostream>
 #include <sstream>
@@ -79,17 +78,16 @@ void Uci::onIsReady(const std::string &line)
 
 void Uci::onGo(const std::string &line)
 {
-	Move move;
-
-	Board board = engine.getPosition();
-	std::cerr << toString(board) << std::endl;
-
-	if (engine.poll(move)) {
-		send("bestmove " + move.toLan());
+	Evaluation e;
+	if (!engine.poll(e)) {
+		return;
 	}
 
-	board.applyMoves({move});
-	std::cerr << toString(board) << std::endl;
+	send("bestmove " + e.best.toLan());
+
+	logInfo("best move:    " + e.best.toLan());
+	logInfo("eval:         " + std::to_string(e.eval));
+	logInfo("continuation: " + e.continuation.toLan());
 }
 
 void Uci::onUciNewGame(const std::string &line)

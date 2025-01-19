@@ -9,6 +9,13 @@ namespace vimlock
 class Move;
 class MoveEval;
 
+struct Evaluation
+{
+	int eval;
+	Move best;
+	MoveList continuation;
+};
+
 struct Node
 {
 	/// Theoretical maximum is 218 based on web search.
@@ -16,7 +23,8 @@ struct Node
 
 	Move getMove() const;
 
-	std::string getPath() const;
+	/// Return list of moves leading to this position
+	MoveList getPath() const;
 
 	/// Board state at this node
 	Board board;
@@ -60,7 +68,7 @@ public:
 
 	/// If a best move is available, stores it in `ret` and returns true.
 	/// If best move is not yet available, returns false and leaves `ret` untouched.
-	bool poll(Move &ret);
+	bool poll(Evaluation &ret);
 
 	/// Stop searching for the best move.
 	void stop();
@@ -71,11 +79,11 @@ private:
 	void addChildNode(Node *parent, Square src, Square dst, Piece promote=PAWN);
 
 	/// Evaluate current nodes position, taking into account piece value, king safety, etc.
-	void evaluate(Node *node, const MoveEval &eval);
+	void evaluate(Node *node);
 
 	void minimax(Node *node, bool maximizing) const;
 
-	int getScore(Node *node, const MoveEval &eval, Color color) const;
+	int getScore(const Board &board, Color color) const;
 
 	Node * allocNode();
 	void freeNode(Node *node);
@@ -84,7 +92,7 @@ private:
 
 	Board board;
 	
-	int maxDepth = 4;
+	int maxDepth = 2;
 };
 
 } // namespace vimlock

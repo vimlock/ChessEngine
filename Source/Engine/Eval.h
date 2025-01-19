@@ -29,7 +29,7 @@ public:
 class MoveEval
 {
 public:
-	MoveEval(const Board &board);
+	MoveEval(const Board &board, Color color);
 
 	/// Return bitboard of all of our own pieces.
 	Bitboard getOwnPieces() const;
@@ -50,6 +50,9 @@ public:
 
 	/// Return squares where we are currently attacking.
 	Bitboard getAttackingSquares() const;
+
+	/// Return bitboard of every square where we can move to.
+	Bitboard getOwnAllAvailableMoves() const;
 
 	/// Returns true if the current player is currently is check.
 	bool isInCheck() const;
@@ -83,6 +86,9 @@ private:
 
 	/// Squares currently threathened by us.
 	Bitboard attackingSquares;
+
+	/// All squares where we can move to.
+	Bitboard ownAvailableMoves;
 };
 
 } // namespace vimlock

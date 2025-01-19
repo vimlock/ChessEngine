@@ -1,4 +1,5 @@
 #include "Log.h"
+#include "Format.h"
 
 #include <fstream>
 #include <iostream>
@@ -9,9 +10,15 @@ namespace vimlock
 class Logger
 {
 public:
-	Logger()
+	Logger():
+		stream(std::cerr)
 	{
-		stream.open("log.txt", std::ios::out | std::ios::app);
+	}
+
+	Logger(const std::string &file_):
+		file(file_, std::ios::out),
+		stream(file)
+	{
 	}
 
 	static Logger & instance()
@@ -20,13 +27,34 @@ public:
 		return singleton;
 	}
 
-	std::fstream stream;
+	std::fstream file;
+	std::ostream &stream;
 };
 
 void logInfo(const std::string &msg)
 {
 	Logger::instance().stream << "[info]  " << msg << std::endl;
-	std::cerr << "[info]  " << msg << std::endl;
+}
+
+void logInfo(const std::string &msg, const Board &board)
+{
+	BoardTerminalFormatter fmt;
+	fmt.setBoard(board);
+
+	Logger::instance().stream << "[info]  " << msg << std::endl;
+	Logger::instance().stream << fmt.toString() << std::endl;
+	Logger::instance().stream.flush();
+}
+
+void logInfo(const std::string &msg, const Board &board, const Bitboard &bitboard)
+{
+	BoardTerminalFormatter fmt;
+	fmt.setBoard(board);
+	fmt.setBitboard(bitboard);
+
+	Logger::instance().stream << "[info]  " << msg << std::endl;
+	Logger::instance().stream << fmt.toString() << std::endl;
+	Logger::instance().stream.flush();
 }
 
 void logError(const std::string &msg)
