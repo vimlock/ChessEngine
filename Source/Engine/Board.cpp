@@ -1,47 +1,19 @@
 #include "Board.h"
 #include "Eval.h"
-#include "Move.h"
+#include "Format.h"
 #include "Log.h"
-
-#include <cassert>
 
 namespace vimlock
 {
 
-SquareState::SquareState():
-	bits(0)
-{
-}
-
-SquareState::SquareState(Color color, Piece piece):
-	bits(color | piece)
-{
-}
-
-bool SquareState::isOccupied() const
-{
-	return bits & PIECE_MASK;
-}
-
-Color SquareState::getColor() const
-{
-	assert(isOccupied());
-	return static_cast<Color>(bits & COLOR_MASK);
-}
-
-Piece SquareState::getPiece() const
-{
-	assert(isOccupied());
-	return static_cast<Piece>(bits & PIECE_MASK);
-}
-
-uint8_t SquareState::getBits() const
-{
-	return bits;
-}
-
 Board::Board()
 {
+	castleRights = Bitboard(A1)
+		| Bitboard(E1)
+		| Bitboard(H1)
+		| Bitboard(A8)
+		| Bitboard(E8)
+		| Bitboard(H8);
 }
 
 void Board::clear()
@@ -52,6 +24,13 @@ void Board::clear()
 
 void Board::setStandardPosition()
 {
+	castleRights = Bitboard(A1)
+		| Bitboard(E1)
+		| Bitboard(H1)
+		| Bitboard(A8)
+		| Bitboard(E8)
+		| Bitboard(H8);
+
 	// Clear any previous board state.
 	clear();
 
@@ -94,40 +73,6 @@ void Board::setStandardPosition()
 	setSquare(H7, BLACK, PAWN);
 }
 
-void Board::setSquare(Square idx, Color color, Piece piece)
-{
-	setSquare(idx, SquareState(color, piece));
-}
-
-void Board::setSquare(RankAndFile idx, Color color, Piece piece)
-{
-	setSquare(Square(idx), SquareState(color, piece));
-}
-
-void Board::setSquare(Square idx, SquareState square)
-{
-	squares[idx.getIndex()] = square;
-}
-
-SquareState Board::getSquare(Square idx) const
-{
-	return squares[idx.getIndex()];
-}
-
-SquareState Board::getSquare(int file, int rank) const
-{
-	return getSquare(Square(file, rank));
-}
-
-Color Board::getCurrent() const
-{
-	return current;
-}
-
-void Board::setCurrent(Color color)
-{
-	current = color;
-}
 
 void Board::flipCurrent()
 {
@@ -147,7 +92,7 @@ bool Board::applyMoves(const MoveList &moves)
 	return true;
 }
 
-/// TODO: Currently this allows capturing our own pieces
+/// TODO: Currently this allows capturing our own pieces if caller so wants
 bool Board::movePiece(Square src, Square dst, Piece promote)
 {
 	SquareState tmp = getSquare(src);
@@ -163,7 +108,38 @@ bool Board::movePiece(Square src, Square dst, Piece promote)
 	setSquare(dst, tmp);
 	setSquare(src, SquareState());
 
+	castleRights = castleRights & ~Bitboard(src);
+
+	if (tmp.getPiece() == KING) {
+		if (dst.getFile() == src.getFile() + 2) {
+			// Castling kingside
+			movePiece(Square(FILE_H, dst.getRank()), Square(FILE_F, dst.getRank()));
+		}
+		else if (dst.getFile() == src.getFile() - 2) {
+			// Castling queenside
+			movePiece(Square(FILE_A, dst.getRank()), Square(FILE_D, dst.getRank()));
+		}
+	}
+
 	return true;
+}
+
+bool Board::canCastle(Square dst) const
+{
+	Bitboard whitek = Bitboard(H1) | Bitboard(E1);
+	Bitboard whiteq = Bitboard(A1) | Bitboard(E1);
+	Bitboard blackk = Bitboard(H8) | Bitboard(E8);
+	Bitboard blackq = Bitboard(A8) | Bitboard(E8);
+
+	switch (dst.getIndex()) {
+		case G1: return (castleRights & whitek) == whitek;
+		case C1: return (castleRights & whiteq) == whiteq;
+		case G8: return (castleRights & blackk) == blackk;
+		case C8: return (castleRights & blackq) == blackq;
+	}
+
+	assert(false && "Should be unreachable");
+	return false;
 }
 
 } // namespace vimlock

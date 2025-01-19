@@ -3,6 +3,7 @@
 
 #include "Move.h"
 #include "Square.h"
+#include "Bitboard.h"
 
 namespace vimlock
 {
@@ -95,6 +96,17 @@ public:
 	/// Apply given moves to board state.
 	bool applyMoves(const MoveList &moves);
 
+	/// Returns true if given square can be castled to
+	/// 
+	/// G1: white kingside castle
+	/// C1: white queenside castle
+	/// G8: black kingside castle
+	/// C8: black queenside castle
+	///
+	/// NOTE: this does not check if the king is or would be in check
+	/// NOTE: do not call with other squares
+	bool canCastle(Square dst) const;
+
 private:
 	/// State of all the squares on the board.
 	SquareState squares[64];
@@ -102,12 +114,14 @@ private:
 	/// Current players turn.
 	Color current = WHITE;
 
-	/// Bitmask of players who can still castle.
-	unsigned castleRights = WHITE | BLACK;
+	/// Bitmask of squares with castle rights.
+	Bitboard castleRights;
 
 	// TODO: en-passant state
 };
 
 } // namespace vimlock
+
+#include "Board.inl"
 
 #endif // __BOARD_H__

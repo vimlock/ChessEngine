@@ -174,11 +174,13 @@ void Engine::evaluate(Node *node)
 
 	node->eval = own - opp;
 
+#if 0
 	logInfo("eval " + node->getPath().toLan() + " " +
 			std::to_string(own) + " - " + std::to_string(opp) +
 			" = " + std::to_string(node->eval),
 		node->board
 	);
+#endif
 }
 
 void Engine::minimax(Node *node, bool maximizing) const
@@ -219,7 +221,7 @@ int Engine::getScore(const Board &board, Color color) const
 	int ret = 0;
 
 	// Sum raw piece values
-	for (int i = 0; i <  64; ++i) {
+	for (uint64_t i = 0; i <  64; ++i) {
 		SquareState square = board.getSquare(Square(i));
 
 		if (!square.isOccupied() || square.getColor() != color)

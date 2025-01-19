@@ -1,68 +1,76 @@
-#include "Bitboard.h"
+#ifndef __BITBOARD_INL__
+#define __BITBOARD_INL__
+#pragma once
 
+#include "Bitboard.h"
 #include <cassert>
 
 namespace vimlock
 {
 
-Bitboard::Bitboard():
+inline Bitboard::Bitboard():
 	bits(0)
 {
 }
 
-Bitboard::Bitboard(Square square)
+inline Bitboard::Bitboard(Square square)
 {
 	bits = 1ULL << square.getIndex();
 }
 
-Bitboard::Bitboard(uint64_t bits_):
+inline Bitboard::Bitboard(RankAndFile index)
+{
+	bits = 1ULL << static_cast<uint64_t>(index);
+}
+
+inline Bitboard::Bitboard(uint64_t bits_):
 	bits(bits_)
 {
 }
 
-Bitboard Bitboard::file(int file)
+inline Bitboard Bitboard::file(int file)
 {
 	assert(file >= 0 && file < 8);
 	return Bitboard(0x0101010101010101ULL << file);
 }
 
-Bitboard Bitboard::rank(int rank)
+inline Bitboard Bitboard::rank(int rank)
 {
 	assert(rank >= 0 && rank < 8);
 	return Bitboard(0xFFULL << rank * 8);
 }
 
-bool Bitboard::empty() const
+inline bool Bitboard::empty() const
 {
 	return bits == 0;
 }
 
-uint64_t Bitboard::rawBits() const
+inline uint64_t Bitboard::rawBits() const
 {
 	return bits;
 }
 
-bool Bitboard::contains(int file, int rank) const
+inline bool Bitboard::contains(int file, int rank) const
 {
 	return *this & Bitboard(Square(file, rank));
 }
 
-bool Bitboard::contains(Square square) const
+inline bool Bitboard::contains(Square square) const
 {
 	return *this & Bitboard(square);
 }
 
-bool Bitboard::overlaps(const Bitboard &other) const
+inline bool Bitboard::overlaps(const Bitboard &other) const
 {
 	return !(*this & other).empty();
 }
 
-/// TODO: Unoptimized, there exists compiler built-in functions for this.
-int Bitboard::count() const
+inline int Bitboard::count() const
 {
 #if defined(__GNUC__) || defined(__clang__)
 	return __builtin_popcountll(bits);
 #else
+#warning "no optimized function for popcount"
 	int ret = 0;
 
 	for (unsigned i = 0; i < 64; ++i) {
@@ -73,13 +81,13 @@ int Bitboard::count() const
 #endif
 }
 
-Bitboard Bitboard::inverted() const
+inline Bitboard Bitboard::inverted() const
 {
 	return Bitboard(~bits);
 }
 
 // TODO: This is basically just an endianness flip?
-Bitboard Bitboard::flipRanks() const
+inline Bitboard Bitboard::flipRanks() const
 {
 	uint64_t ret =
 		((bits & 0x00000000000000FFULL) << 56ULL) |
@@ -94,54 +102,67 @@ Bitboard Bitboard::flipRanks() const
 	return Bitboard(ret);
 }
 
-Bitboard::operator bool () const
+
+inline Bitboard::operator bool () const
 {
 	return bits;
 }
 
-Bitboard Bitboard::operator ~ () const
+inline bool Bitboard::operator == (Bitboard rhs) const
+{
+	return bits == rhs.bits;
+}
+
+inline bool Bitboard::operator != (Bitboard rhs) const
+{
+	return bits != rhs.bits;
+}
+
+inline Bitboard Bitboard::operator ~ () const
 {
 	return inverted();
 }
 
-Bitboard Bitboard::operator | (Bitboard rhs) const
+inline Bitboard Bitboard::operator | (Bitboard rhs) const
 {
 	return Bitboard(bits | rhs.bits);
 }
 
-Bitboard& Bitboard::operator |= (Bitboard rhs)
+inline Bitboard& Bitboard::operator |= (Bitboard rhs)
 {
 	return *this = *this | rhs;
 }
 
-Bitboard Bitboard::operator & (Bitboard rhs) const
+inline Bitboard Bitboard::operator & (Bitboard rhs) const
 {
 	return Bitboard(bits & rhs.bits);
 }
 
-Bitboard& Bitboard::operator &= (Bitboard rhs)
+inline Bitboard& Bitboard::operator &= (Bitboard rhs)
 {
 	return *this = *this & rhs;
 }
 
-Bitboard Bitboard::operator << (uint64_t nbits) const
+inline Bitboard Bitboard::operator << (uint64_t nbits) const
 {
 	return Bitboard(bits << nbits);
 }
 
-Bitboard Bitboard::operator << (int nbits) const
+inline Bitboard Bitboard::operator << (int nbits) const
 {
 	return Bitboard(bits << static_cast<uint64_t>(nbits));
 }
 
-Bitboard Bitboard::operator >> (uint64_t nbits) const
+inline Bitboard Bitboard::operator >> (uint64_t nbits) const
 {
 	return Bitboard(bits >> nbits);
 }
 
-Bitboard Bitboard::operator >> (int nbits) const
+inline Bitboard Bitboard::operator >> (int nbits) const
 {
 	return Bitboard(bits >> static_cast<uint64_t>(nbits));
 }
 
 } // namespace vimlock
+
+#endif // __BITBOARD_INL__

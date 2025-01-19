@@ -3,6 +3,7 @@
 #include "Board.h"
 
 #include <cstring>
+#include <ostream>
 
 namespace vimlock
 {
@@ -130,5 +131,38 @@ std::string toString(const Board &board)
 	return ret;
 }
 
+std::ostream & operator << (std::ostream &os, Square const &val)
+{
+	return os << static_cast<char>('a' + val.getFile()) << static_cast<char>('1' + val.getRank());
+}
+
+std::ostream & operator << (std::ostream &os, Piece const &val)
+{
+	switch (val) {
+		case PAWN: return os << "pawn";
+		case ROOK: return os << "rook";
+		case KNIGHT: return os << "knight";
+		case BISHOP: return os << "bishop";
+		case QUEEN: return os << "queen";
+		case KING: return os << "king";
+	}
+
+	return os << "<invalid>";
+}
+
+std::ostream & operator << (std::ostream &os, Color const &val)
+{
+	switch (val) {
+		case WHITE: return os << "white";
+		case BLACK: return os << "black";
+	}
+
+	return os << "<invalid>";
+}
+
+std::ostream & operator << (std::ostream &os, Bitboard const &val)
+{
+	return os << toString(val);
+}
 
 } // namespace vimlock

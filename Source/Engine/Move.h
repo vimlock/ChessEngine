@@ -9,9 +9,7 @@
 namespace vimlock
 {
 
-class Move;
-
-struct Move
+class Move
 {
 public:
 	Move();

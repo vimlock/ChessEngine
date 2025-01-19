@@ -11,6 +11,13 @@ TEST_CASE("Bitboard constructors", "[Bitboard]")
 		REQUIRE(Bitboard().empty());
 	}
 
+	// In case the compiler decides to choose Bitboard(uint64_t) constructor
+	SECTION("No implicit conversion weirdness") {
+		REQUIRE(Bitboard(H1).count() == 1);
+		REQUIRE(Bitboard(H8).count() == 1);
+		REQUIRE(Bitboard(A8).count() == 1);
+	}
+
 	SECTION("Single bit constructor works") {
 		REQUIRE(Bitboard(Square(5, 5)).count() == 1);
 		REQUIRE(Bitboard(Square(5, 5)).contains(5, 5));

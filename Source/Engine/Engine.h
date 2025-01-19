@@ -11,8 +11,14 @@ class MoveEval;
 
 struct Evaluation
 {
+	/// How strong engine considers the current position if
+	/// going by the continuation.
 	int eval;
+
+	/// The next best move.
 	Move best;
+
+	/// Best contination according to the engine.
 	MoveList continuation;
 };
 
@@ -92,7 +98,7 @@ private:
 
 	Board board;
 	
-	int maxDepth = 2;
+	int maxDepth = 4;
 };
 
 } // namespace vimlock

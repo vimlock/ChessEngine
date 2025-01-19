@@ -1,5 +1,6 @@
 #ifndef __BITBOARD_H__
 #define __BITBOARD_H__
+#pragma once
 
 #include "Square.h"
 
@@ -16,6 +17,9 @@ public:
 
 	/// Construct a bitboard with given square set to 1
 	explicit Bitboard(Square square);
+
+	/// Construct a bitboard with given square set to 1
+	explicit Bitboard(RankAndFile index);
 
 	/// Construct a bitboard with all bits assigned
 	explicit Bitboard(uint64_t bits);
@@ -54,6 +58,10 @@ public:
 	/// Returns inverted version of this bitboard with squares flipped.
 	Bitboard operator ~ () const;
 
+	// Strict equality comparison
+	bool operator == (Bitboard rhs) const;
+	bool operator != (Bitboard rhs) const;
+
 	/// Return logical OR between 2 bitboards.
 	Bitboard operator | (Bitboard rhs) const;
 	Bitboard& operator |= (Bitboard rhs);
@@ -75,5 +83,7 @@ private:
 };
 
 } // namespace vimlock
-
+  
+#include "Bitboard.inl"
+  
 #endif // __BITBOARD_H__
