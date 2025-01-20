@@ -4,8 +4,10 @@ set (CMAKE_DISABLE_SOURCE_CHANGES ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_CXX_STANDARD 11)
 
+option (BUILD_TESTS "Build unit tests" OFF)
+
 project(
-	ChessEngineShowcase
+	ChessEngine
 	VERSION 1.0
 	LANGUAGES CXX
 )
@@ -34,12 +36,14 @@ add_executable(ChessEval
 
 target_link_libraries(ChessEval PRIVATE ChessEngineLib)
 
-add_executable(RunTests
-	Tests/Main.cpp
-	Tests/TestBoard.cpp
-	Tests/TestBitboard.cpp
-	Tests/TestEngine.cpp
-	Tests/TestMove.cpp
-	Tests/TestMoves.cpp
-)
-target_link_libraries(RunTests PRIVATE ChessEngineLib)
+if (BUILD_TESTS)
+	add_executable(RunTests
+		Tests/Main.cpp
+		Tests/TestBoard.cpp
+		Tests/TestBitboard.cpp
+		Tests/TestEngine.cpp
+		Tests/TestMove.cpp
+		Tests/TestMoves.cpp
+	)
+	target_link_libraries(RunTests PRIVATE ChessEngineLib)
+endif()
