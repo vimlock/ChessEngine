@@ -38,6 +38,9 @@ public:
 	/// Returns true if the current player is currently is check.
 	bool isInCheck() const;
 
+	/// Return where our king is, only one bit is set in this mask always.
+	Bitboard getOwnKing() const;
+
 private:
 	/// Current board state.
 	const Board &board;

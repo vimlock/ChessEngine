@@ -6,64 +6,84 @@
 namespace vimlock
 {
 
-inline Bitboard::Bitboard():
+inline constexpr Bitboard::Bitboard():
 	bits(0)
 {
 }
 
-inline Bitboard::Bitboard(Square square)
+inline constexpr Bitboard::Bitboard(Square square):
+	bits(1ULL << square.getIndex())
 {
-	bits = 1ULL << square.getIndex();
 }
 
-inline Bitboard::Bitboard(RankAndFile index)
+inline constexpr Bitboard::Bitboard(RankAndFile index):
+	bits(1ULL << static_cast<uint64_t>(index))
 {
-	bits = 1ULL << static_cast<uint64_t>(index);
 }
 
-inline Bitboard::Bitboard(uint64_t bits_):
+inline constexpr Bitboard::Bitboard(uint64_t bits_):
 	bits(bits_)
 {
 }
 
-inline Bitboard Bitboard::file(int file)
+inline constexpr Bitboard Bitboard::file(int file)
 {
-	assert(file >= 0 && file < 8);
 	return Bitboard(0x0101010101010101ULL << file);
 }
 
-inline Bitboard Bitboard::rank(int rank)
+inline constexpr Bitboard Bitboard::rank(int rank)
 {
-	assert(rank >= 0 && rank < 8);
 	return Bitboard(0xFFULL << rank * 8);
 }
 
-inline bool Bitboard::empty() const
+inline Bitboard Bitboard::adjacent(Square square)
+{
+	Bitboard center(square);
+	Bitboard ret;
+
+	// Left, right
+	ret |= (center & ~file(FILE_A)) >> 1;
+	ret |= (center & ~file(FILE_H)) << 1;
+
+	// Up, down
+	ret |= center << 8;
+	ret |= center >> 8;
+
+	// Diagonals
+	ret |= (center & ~file(FILE_A)) << 7;
+	ret |= (center & ~file(FILE_H)) >> 7;
+	ret |= (center & ~file(FILE_H)) << 9;
+	ret |= (center & ~file(FILE_A)) >> 9;
+
+	return ret;
+}
+
+inline constexpr bool Bitboard::empty() const
 {
 	return bits == 0;
 }
 
-inline uint64_t Bitboard::rawBits() const
+inline constexpr uint64_t Bitboard::rawBits() const
 {
 	return bits;
 }
 
-inline bool Bitboard::contains(int file, int rank) const
+inline constexpr bool Bitboard::contains(int file, int rank) const
 {
 	return *this & Bitboard(Square(file, rank));
 }
 
-inline bool Bitboard::contains(Square square) const
+inline constexpr bool Bitboard::contains(Square square) const
 {
 	return *this & Bitboard(square);
 }
 
-inline bool Bitboard::overlaps(const Bitboard &other) const
+inline constexpr bool Bitboard::overlaps(const Bitboard &other) const
 {
 	return !(*this & other).empty();
 }
 
-inline int Bitboard::count() const
+inline constexpr int Bitboard::count() const
 {
 #if defined(__GNUC__) || defined(__clang__)
 	return __builtin_popcountll(bits);
@@ -79,7 +99,21 @@ inline int Bitboard::count() const
 #endif
 }
 
-inline Bitboard Bitboard::inverted() const
+inline constexpr Square Bitboard::findFirstSquare() const
+{
+#if defined(__GNUC__) || defined(__clang__)
+	return Square(__builtin_ffsll(bits));
+#else
+#warning "no optimized function for ffs"
+	for (unsigned i = 0; i < 64; ++i) {
+		if (bits & (1ULL << i))
+			return i;
+	}
+	return 0;
+#endif
+}
+
+inline constexpr Bitboard Bitboard::inverted() const
 {
 	return Bitboard(~bits);
 }
@@ -101,27 +135,27 @@ inline Bitboard Bitboard::flipRanks() const
 }
 
 
-inline Bitboard::operator bool () const
+inline constexpr Bitboard::operator bool () const
 {
 	return bits;
 }
 
-inline bool Bitboard::operator == (Bitboard rhs) const
+inline constexpr bool Bitboard::operator == (Bitboard rhs) const
 {
 	return bits == rhs.bits;
 }
 
-inline bool Bitboard::operator != (Bitboard rhs) const
+inline constexpr bool Bitboard::operator != (Bitboard rhs) const
 {
 	return bits != rhs.bits;
 }
 
-inline Bitboard Bitboard::operator ~ () const
+inline constexpr Bitboard Bitboard::operator ~ () const
 {
 	return inverted();
 }
 
-inline Bitboard Bitboard::operator | (Bitboard rhs) const
+inline constexpr Bitboard Bitboard::operator | (Bitboard rhs) const
 {
 	return Bitboard(bits | rhs.bits);
 }
@@ -131,7 +165,7 @@ inline Bitboard& Bitboard::operator |= (Bitboard rhs)
 	return *this = *this | rhs;
 }
 
-inline Bitboard Bitboard::operator & (Bitboard rhs) const
+inline constexpr Bitboard Bitboard::operator & (Bitboard rhs) const
 {
 	return Bitboard(bits & rhs.bits);
 }
@@ -141,22 +175,22 @@ inline Bitboard& Bitboard::operator &= (Bitboard rhs)
 	return *this = *this & rhs;
 }
 
-inline Bitboard Bitboard::operator << (uint64_t nbits) const
+inline constexpr Bitboard Bitboard::operator << (uint64_t nbits) const
 {
 	return Bitboard(bits << nbits);
 }
 
-inline Bitboard Bitboard::operator << (int nbits) const
+inline constexpr Bitboard Bitboard::operator << (int nbits) const
 {
 	return Bitboard(bits << static_cast<uint64_t>(nbits));
 }
 
-inline Bitboard Bitboard::operator >> (uint64_t nbits) const
+inline constexpr Bitboard Bitboard::operator >> (uint64_t nbits) const
 {
 	return Bitboard(bits >> nbits);
 }
 
-inline Bitboard Bitboard::operator >> (int nbits) const
+inline constexpr Bitboard Bitboard::operator >> (int nbits) const
 {
 	return Bitboard(bits >> static_cast<uint64_t>(nbits));
 }

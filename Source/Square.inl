@@ -1,41 +1,36 @@
 #pragma once
 
 #include "Square.h"
-#include <cassert>
 
 namespace vimlock
 {
 
-inline Square::Square():
+inline constexpr Square::Square():
 	index(0)
 {
 }
 
-inline Square::Square(int file, int rank)
+inline constexpr Square::Square(int file, int rank):
+	index(rank * 8 + file)
 {
-	assert(file >= 0 && file < 8);
-	assert(rank >= 0 && rank < 8);
-
-	index = (rank * 8 + file);
 }
 
-inline Square::Square(uint64_t index_)
+inline constexpr Square::Square(uint64_t index_):
+	index(index_)
 {
-	assert(index_ >= 0 && index_ < 64);
-	index = index_;
 }
 
-inline Square::Square(RankAndFile e)
+inline constexpr Square::Square(RankAndFile e):
+	index(static_cast<uint64_t>(e))
 {
-	index = static_cast<uint64_t>(e);
 }
 
-inline int Square::getFile() const
+inline constexpr int Square::getFile() const
 {
 	return index % 8;
 }
 
-inline int Square::getRank() const
+inline constexpr int Square::getRank() const
 {
 	return index / 8;
 }

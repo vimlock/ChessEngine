@@ -37,7 +37,7 @@ MoveEval::MoveEval(const Board &board_, Color color):
 	// Cache squares where we can move to
 	for (uint64_t i = 0; i < 64; ++i) {
 		if (ownPieces & (Bitboard(Square(i)))) {
-			SquareState square = board.getSquare(i);
+			SquareState square = board.getSquare(Square(i));
 			ownAvailableMoves |= getAvailableMoves(ownColor, square.getPiece(), Square(i), allPieces, ownPieces);
 		}
 	}
@@ -71,6 +71,11 @@ Bitboard MoveEval::getOwnAllAvailableMoves() const
 bool MoveEval::isInCheck() const
 {
 	return attackedSquares & ownKing;
+}
+
+Bitboard MoveEval::getOwnKing() const
+{
+	return ownKing;
 }
 
 } // namespace vimlock

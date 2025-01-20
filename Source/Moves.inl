@@ -69,7 +69,7 @@ inline Bitboard getAvailableCaptures(const Board &board, Bitboard allPieces, Bit
 
 	for (uint64_t i = 0; i < 64; ++i) {
 		if (ownPieces & (Bitboard(Square(i)))) {
-			SquareState square = board.getSquare(i);
+			SquareState square = board.getSquare(Square(i));
 			ret |= getAvailableCaptures(square.getColor(), square.getPiece(), Square(i), allPieces);
 		}
 	}

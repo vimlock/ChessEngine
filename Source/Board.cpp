@@ -81,7 +81,7 @@ void Board::flipCurrent()
 
 bool Board::applyMoves(const MoveList &moves)
 {
-	for (const Move &it : moves) {
+	for (const auto &it : moves) {
 
 		if (!movePiece(it.getSource(), it.getDestination(), it.getPromotion()))
 			return false;

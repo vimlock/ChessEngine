@@ -19,6 +19,12 @@ static Bitboard edges = Bitboard(0x20c0c18181818181);
 
 static Bitboard topAndBottomRanks = Bitboard::rank(RANK_8) | Bitboard::rank(RANK_1);
 
+constexpr int PAWN_VALUE   = 1000;
+constexpr int ROOK_VALUE   = 5000;
+constexpr int KNIGHT_VALUE = 3000;
+constexpr int BISHOP_VALUE = 3000;
+constexpr int QUEEN_VALUE  = 9000;
+
 Move Node::getMove() const
 {
 	return Move(src, dst, promote);
@@ -295,17 +301,32 @@ int Engine::getScore(const Board &board, Color color) const
 	ret += (centerSquares & eval.getAttackingSquares()).count() * 100;
 	ret += (centerSquares & eval.getOwnPieces()).count() * 100;
 
+	// Doubled pawns are bad
+	for (int i = FILE_A; i <= FILE_H; ++i) {
+		if ((eval.getOwnPieces() & Bitboard::file(i)).count() > 1) {
+			ret -= 100;
+		}
+	}
+
+	// Shielded king is good
+	Square king = eval.getOwnKing().findFirstSquare();
+	int guards = (eval.getOwnPieces() & Bitboard::adjacent(king)).count();
+	if (guards > 2)
+		ret += 200;
+	else if (guards == 1)
+		ret += 100;
+
 	return ret;
 }
 
 int Engine::getPieceValue(Piece piece) const
 {
 	switch (piece) {
-		case PAWN:   return 1000;
-		case ROOK:   return 5000;
-		case KNIGHT: return 3000;
-		case BISHOP: return 3000;
-		case QUEEN:  return 9000;
+		case PAWN:   return PAWN_VALUE;
+		case ROOK:   return ROOK_VALUE;
+		case KNIGHT: return KNIGHT_VALUE;
+		case BISHOP: return BISHOP_VALUE;
+		case QUEEN:  return QUEEN_VALUE;
 		case KING:   return 0; // Worth nothing, yet everything.
 	}
 

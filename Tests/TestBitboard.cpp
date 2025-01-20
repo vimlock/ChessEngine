@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include "Bitboard.h"
+#include "Format.h"
 
 using namespace vimlock;
 
@@ -84,6 +85,14 @@ TEST_CASE("Bitboard ops")
 		REQUIRE(Bitboard(0x1ULL));
 		REQUIRE(Bitboard(0xFFFFFFFFFFULL));
 	}
+}
+
+TEST_CASE("Bitboard adjacent filling")
+{
+	REQUIRE(Bitboard::adjacent(A1) == (Bitboard(A2) | Bitboard(B1) | Bitboard(B2)));
+	REQUIRE(Bitboard::adjacent(H8) == (Bitboard(H7) | Bitboard(G8) | Bitboard(G7)));
+	REQUIRE(Bitboard::adjacent(A8) == (Bitboard(A7) | Bitboard(B8) | Bitboard(B7)));
+	REQUIRE(Bitboard::adjacent(H1) == (Bitboard(G1) | Bitboard(H2) | Bitboard(G2)));
 }
 
 TEST_CASE("Bitboard flip ranks")
