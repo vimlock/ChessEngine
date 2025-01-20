@@ -83,7 +83,7 @@ struct MoveCandidate
 class Engine
 {
 public:
-	Engine(int maxDepth=5);
+	Engine(int maxDepth=6);
 
 	/// Set current board position.
 	void setPosition(const Board &board);

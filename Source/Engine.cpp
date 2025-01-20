@@ -2,7 +2,6 @@
 #include "Eval.h"
 #include "Move.h"
 #include "Moves.h"
-#include "Log.h"
 
 #include <cassert>
 #include <cstddef>
@@ -107,7 +106,6 @@ void Engine::traverse(Node *node, int alpha, int beta)
 {
 	if (node->depth >= maxDepth) {
 		evaluate(node);
-		// logInfo("terminal ("+std::to_string(node->depth)+") "+" eval ("+std::to_string(node->eval)+"): " + node->getMoves().toLan());
 		return;
 	}
 
@@ -223,8 +221,6 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 		traverse(child, alpha, beta);
 
-		// logInfo("depth ("+std::to_string(node->depth)+") "+node->getMove().toLan()+" consider " + child->getMove().toLan() + " eval=" + std::to_string(child->eval));
-
 		if (maximize) {
 			if (child->eval > node->eval) {
 
@@ -232,10 +228,6 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 				std::copy(child->moves, child->moves + child->movesCount, bestMoves);
 				bestMovesCount = child->movesCount;
-
-				// logInfo("Pick (max) " + cur + " over " + old);
-
-				// logInfo("depth ("+std::to_string(node->depth)+") pick ("+std::to_string(node->movesCount)+"): " + node->getMoves().toLan());
 			}
 			if (child->eval > alpha) {
 				alpha = child->eval;
@@ -247,8 +239,6 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 				std::copy(child->moves, child->moves + child->movesCount, bestMoves);
 				bestMovesCount = child->movesCount;
-
-				// logInfo("Pick (min) " + cur + " over " + old);
 			}
 			if (child->eval < beta) {
 				beta = child->eval;
@@ -259,7 +249,6 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 		// Prune remaining branches
 		if (alpha >= beta) {
-			// logInfo("depth ("+std::to_string(node->depth)+") pruned " + std::to_string(possibleMovesCount - i) + "/" + std::to_string(possibleMovesCount));
 			break;
 		}
 	}
@@ -271,26 +260,21 @@ void Engine::traverse(Node *node, int alpha, int beta)
 		// Stalemate?
 		if (!(ownKing & attackedSquares)) {
 			node->eval = 0;
-			// logInfo("depth ("+std::to_string(node->depth)+") stalemate " + node->getMoves().toLan());
 			return;
 		}
 		else if (board.getCurrent() == node->board.getCurrent()) {
 			// Opponent checkmated us, try to struggle until the end
 			node->eval = std::numeric_limits<int>::min() + node->depth;
-			// logInfo("depth ("+std::to_string(node->depth)+") checkmate (loss) " + node->getMoves().toLan());
 		}
 		else {
 			// Opponent got checkmated, prefer shorter checkmates
 			node->eval = std::numeric_limits<int>::max() - node->depth;
-			// logInfo("depth ("+std::to_string(node->depth)+") checkmate (win) " + node->getMoves().toLan());
 		}
 	}
 	else {
 		std::copy(bestMoves, bestMoves + bestMovesCount, node->moves);
 		node->movesCount = bestMovesCount;
 	}
-
-	// logInfo("depth ("+std::to_string(node->depth)+") "+" eval ("+std::to_string(node->eval)+"): " + node->getMoves().toLan());
 }
 
 void Engine::evaluate(Node *node)
