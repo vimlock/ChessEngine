@@ -2,6 +2,7 @@
 
 #include "Enums.h"
 #include <cstdint>
+#include <string> 
 
 namespace vimlock
 {
@@ -36,6 +37,8 @@ public:
 	constexpr bool operator == (Square rhs) const { return index == rhs.index; }
 	/// Equality operators
 	constexpr bool operator != (Square rhs) const { return index != rhs.index; }
+
+	std::string toString() const;
 
 private:
 	/// Stored as 64-bit to avoid unnecessary casting when used with Bitboard

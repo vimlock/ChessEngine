@@ -111,6 +111,9 @@ public:
 	/// NOTE: usefull only for testing and debugging, does not cache any computed bitboards.
 	Bitboard getMoves(Square idx) const;
 
+	/// Return bitboard of pawns which are potentially targets for en passant.
+	Bitboard getEnPassantSquares() const { return enpassantSquares; }
+
 private:
 	Bitboard getPawnMoves(Color color, Square idx) const;
 	Bitboard getPawnAttacks(Color color, Square idx) const;
@@ -128,6 +131,9 @@ private:
 
 	/// Bitboard of squares with castle rights.
 	Bitboard castleRights;
+
+	/// Squares which are eligible for en passant.
+	Bitboard enpassantSquares;
 
 	// TODO: en-passant state
 };

@@ -133,7 +133,7 @@ std::string toString(const Board &board)
 
 std::ostream & operator << (std::ostream &os, Square const &val)
 {
-	return os << static_cast<char>('a' + val.getFile()) << static_cast<char>('1' + val.getRank());
+	return os << val.toString();
 }
 
 std::ostream & operator << (std::ostream &os, Piece const &val)

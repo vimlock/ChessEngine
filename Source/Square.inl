@@ -34,5 +34,13 @@ inline constexpr int Square::getRank() const
 {
 	return index / 8;
 }
+
+inline std::string Square::toString() const
+{
+	std::string ret;
+	ret += static_cast<char>('a' + getFile());
+	ret += static_cast<char>('1' + getRank());
+	return ret;
+}
 	
 } // namespace vimlock

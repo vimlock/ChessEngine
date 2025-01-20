@@ -194,3 +194,27 @@ TEST_CASE("Promoting works")
 	}
 
 }
+
+TEST_CASE("En passant works")
+{
+	Board board;
+
+	SECTION("For white") {
+		board.setSquare(A7, BLACK, PAWN);
+		board.setSquare(B5, WHITE, PAWN);
+
+		REQUIRE(board.movePiece(A7, A5));
+		REQUIRE(board.movePiece(B5, A6));
+		REQUIRE(!board.getSquare(A5).isOccupied());
+	}
+
+	SECTION("For black") {
+		board.setSquare(A2, WHITE, PAWN);
+		board.setSquare(B4, BLACK, PAWN);
+
+		REQUIRE(board.movePiece(A2, A4));
+		REQUIRE(board.movePiece(B4, A3));
+		REQUIRE(!board.getSquare(A4).isOccupied());
+	}
+
+}

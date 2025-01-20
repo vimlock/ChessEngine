@@ -1,10 +1,17 @@
 #include "Board.h"
 #include "Moves.h"
 #include "Eval.h"
+#include "Format.h"
 #include "Log.h"
 
 namespace vimlock
 {
+
+// Starting squares of pawns.
+constexpr Bitboard pawnRanks = Bitboard::rank(RANK_7) | Bitboard::rank(RANK_2);
+
+// Squares where pawn would land after double move
+constexpr Bitboard pawnDoubleMoveRanks = Bitboard::rank(RANK_5) | Bitboard::rank(RANK_4);
 
 Board::Board()
 {
@@ -108,6 +115,7 @@ bool Board::movePiece(Square src, Square dst, Piece promote)
 	setSquare(dst, tmp);
 	setSquare(src, SquareState());
 
+	// Remove any castle rights the piece had
 	castleRights = castleRights & ~Bitboard(src);
 
 	if (tmp.getPiece() == KING) {
@@ -119,6 +127,28 @@ bool Board::movePiece(Square src, Square dst, Piece promote)
 			// Castling queenside
 			movePiece(Square(FILE_A, dst.getRank()), Square(FILE_D, dst.getRank()));
 		}
+	}
+
+	// Was this an en passant move?
+	if (tmp.getPiece() == PAWN && (Bitboard(dst) & enpassantSquares)) {
+
+		Square enpassanted = Square(dst.getFile(), src.getRank());
+
+		assert(getSquare(enpassanted).isOccupied());
+		// Capture the en-passanted square
+		setSquare(enpassanted, SquareState());
+	}
+
+	// Clear any pawns from being en-passanted from previous turn.
+	enpassantSquares = Bitboard();
+
+	// Pawn can be en-passanted by opponent?
+	if (tmp.getPiece() == PAWN && (Bitboard(src) & pawnRanks) && (Bitboard(dst) & pawnDoubleMoveRanks)) {
+		if (dst.getRank() == RANK_4)
+			enpassantSquares = Bitboard(Square(src.getFile(), RANK_3));
+		else
+			enpassantSquares = Bitboard(Square(src.getFile(), RANK_6));
+
 	}
 
 	return true;

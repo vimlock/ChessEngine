@@ -7,6 +7,7 @@ namespace vimlock
 
 class Engine;
 
+/// Universal Chess Interface (UCI) support.
 class Uci
 {
 public:

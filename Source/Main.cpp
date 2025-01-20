@@ -7,10 +7,6 @@ using namespace vimlock;
 
 int main(int argc, const char *argv[])
 {
-	// BoardTerminalFormatter fmt;
-	// fmt.setBoard(board);
-	// fmt.setBitboard(bb);
-	
 	Engine engine;
 
 	Uci uci{engine};
