@@ -57,6 +57,29 @@ struct Node
 	Move moves[256];
 };
 
+enum MoveOrder
+{
+	MOVE_CAPTURE,
+	MOVE_PROMOTE,
+	MOVE_REGULAR
+};
+
+struct MoveCandidate
+{
+	MoveCandidate()
+	{
+	}
+
+	MoveCandidate(Move move_, MoveOrder order_):
+		move(move_),
+		order(order_)
+	{
+	}
+
+	Move move;
+	MoveOrder order;
+};
+
 class Engine
 {
 public:

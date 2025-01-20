@@ -113,11 +113,12 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 	Bitboard allPieces = node->allPieces;
 	Bitboard ownPieces = node->ownPieces;
+	Bitboard oppPieces = node->oppPieces;
 
 	// Generate possible moves from current position
 	
 	int possibleMovesCount = 0;
-	Move possibleMoves[256];
+	MoveCandidate possibleMoves[256];
 	
 	for (uint64_t i = 0; i < 64; ++i) {
 
@@ -146,14 +147,19 @@ void Engine::traverse(Node *node, int alpha, int beta)
 			if (square.getPiece() == PAWN && (dstBitboard & (topAndBottomRanks))) {
 				// Add possible promotions
 				
-				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, ROOK);
-				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, KNIGHT);
-				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, BISHOP);
-				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, QUEEN);
+				possibleMoves[possibleMovesCount++] = MoveCandidate({srcSquare, dstSquare, ROOK}, MOVE_PROMOTE);
+				possibleMoves[possibleMovesCount++] = MoveCandidate({srcSquare, dstSquare, KNIGHT}, MOVE_PROMOTE);
+				possibleMoves[possibleMovesCount++] = MoveCandidate({srcSquare, dstSquare, BISHOP}, MOVE_PROMOTE);
+				possibleMoves[possibleMovesCount++] = MoveCandidate({srcSquare, dstSquare, QUEEN}, MOVE_PROMOTE);
 			}
 			else {
 				// Regular move
-				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare);
+
+				MoveOrder order = MOVE_REGULAR;
+				if (dstBitboard & oppPieces)
+					order = MOVE_CAPTURE;
+
+				possibleMoves[possibleMovesCount++] = MoveCandidate({srcSquare, dstSquare}, order);
 
 				if (square.getPiece() == KING) {
 					// TODO: consider castling
@@ -161,6 +167,11 @@ void Engine::traverse(Node *node, int alpha, int beta)
 			}
 		}
 	}
+
+	// TODO: sorting bucket based approach would be faster
+	std::sort(possibleMoves, possibleMoves + possibleMovesCount, [](const MoveCandidate &a, const MoveCandidate &b) {
+			return static_cast<int>(a.order) < static_cast<int>(b.order);
+	});
 
 	bool maximize = node->board.getCurrent() == board.getCurrent();
 	node->eval = maximize ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
@@ -172,7 +183,7 @@ void Engine::traverse(Node *node, int alpha, int beta)
 
 	for (int i = 0; i < possibleMovesCount; ++i) {
 
-		Move move = possibleMoves[i];
+		Move move = possibleMoves[i].move;
 
 		Node *child = allocNode();
 		child->src = move.getSource();
