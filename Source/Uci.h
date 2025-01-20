@@ -1,6 +1,4 @@
-#ifndef __UCI_H__
-#define __UCI_H__
-
+#pragma once
 #include <iosfwd>
 #include <string>
 
@@ -38,5 +36,3 @@ private:
 };
 
 } // namespace vimlock
-
-#endif // __UCI_H__

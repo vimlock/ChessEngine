@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include "Engine/Engine.h"
-#include "Engine/Format.h"
+#include "Engine.h"
+#include "Format.h"
 
 using namespace vimlock;
 

@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include "Engine/Move.h"
+#include "Move.h"
 
 using namespace vimlock;
 

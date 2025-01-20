@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include "Engine/Board.h"
-#include "Engine/Format.h"
+#include "Board.h"
+#include "Format.h"
 
 using namespace vimlock;
 

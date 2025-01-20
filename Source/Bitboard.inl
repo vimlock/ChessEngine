@@ -1,5 +1,3 @@
-#ifndef __BITBOARD_INL__
-#define __BITBOARD_INL__
 #pragma once
 
 #include "Bitboard.h"
@@ -164,5 +162,3 @@ inline Bitboard Bitboard::operator >> (int nbits) const
 }
 
 } // namespace vimlock
-
-#endif // __BITBOARD_INL__

@@ -1,9 +1,6 @@
-#ifndef __SQUARE_H__
-#define __SQUARE_H__
 #pragma once
 
 #include "Enums.h"
-
 #include <cstdint>
 
 namespace vimlock
@@ -48,5 +45,3 @@ private:
 } // namespace vimlock
   
 #include "Square.inl"
-
-#endif // __SQUARE_H__

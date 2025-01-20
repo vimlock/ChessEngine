@@ -1,7 +1,4 @@
-#ifndef __BITBOARD_H__
-#define __BITBOARD_H__
 #pragma once
-
 #include "Square.h"
 
 namespace vimlock
@@ -85,5 +82,3 @@ private:
 } // namespace vimlock
   
 #include "Bitboard.inl"
-  
-#endif // __BITBOARD_H__

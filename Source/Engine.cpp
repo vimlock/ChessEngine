@@ -2,14 +2,11 @@
 #include "Eval.h"
 #include "Move.h"
 #include "Moves.h"
-#include "Format.h"
-#include "Log.h"
 
 #include <cassert>
 #include <cstddef>
 #include <limits>
 #include <algorithm>
-#include <iostream>
 
 namespace vimlock
 {
@@ -77,7 +74,6 @@ bool Engine::poll(Evaluation &ret)
 	traverse(root);
 
 	if (!root->bestChild) {
-		logError("No available move?");
 		freeNode(root);
 		return false;
 	}
@@ -234,13 +230,6 @@ void Engine::evaluate(Node *node)
 	int opp = getScore(node->board, BoardUtils::getOpponent(board.getCurrent()));
 
 	node->eval = own - opp;
-
-#if 0
-	logInfo("eval " + node->getPath().toLan() + " " +
-			std::to_string(own) + " - " + std::to_string(opp) +
-			" = " + std::to_string(node->eval)
-	);
-#endif
 
 	total++;
 }

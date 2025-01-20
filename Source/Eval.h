@@ -1,6 +1,4 @@
-#ifndef __EVAL_H__
-#define __EVAL_H__
-
+#pragma once
 #include "Bitboard.h"
 #include "Board.h"
 
@@ -67,5 +65,3 @@ private:
 };
 
 } // namespace vimlock
-
-#endif // __EVAL_H__

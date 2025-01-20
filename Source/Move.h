@@ -1,6 +1,4 @@
-#ifndef __MOVE_H__
-#define __MOVE_H__
-
+#pragma once
 #include <vector>
 #include <string>
 
@@ -53,5 +51,3 @@ public:
 };
 
 } // namespace vimlock
-
-#endif // __MOVE_H__

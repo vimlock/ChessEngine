@@ -1,6 +1,4 @@
-#ifndef __FORMAT_H__
-#define __FORMAT_H__
-
+#pragma once
 #include "Square.h"
 #include "Board.h"
 
@@ -46,5 +44,3 @@ std::ostream & operator << (std::ostream &os, Bitboard const &val);
 std::ostream & operator << (std::ostream &os, Move const &val);
 
 } // namespace vimlock
-
-#endif // __FORMAT_H__

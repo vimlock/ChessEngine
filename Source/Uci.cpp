@@ -1,8 +1,8 @@
 #include "Uci.h"
-#include "Engine/Board.h"
-#include "Engine/Engine.h"
-#include "Engine/Move.h"
-#include "Engine/Log.h"
+#include "Board.h"
+#include "Engine.h"
+#include "Move.h"
+#include "Log.h"
 
 #include <iostream>
 #include <sstream>

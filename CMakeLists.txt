@@ -18,13 +18,13 @@ add_compile_options(
 )
 
 add_library(ChessEngineLib STATIC
-	Source/Engine/Board.cpp
-	Source/Engine/Engine.cpp
-	Source/Engine/Eval.cpp
-	Source/Engine/Log.cpp
-	Source/Engine/Move.cpp
-	Source/Engine/Format.cpp
-	Source/UCI/Uci.cpp
+	Source/Board.cpp
+	Source/Engine.cpp
+	Source/Eval.cpp
+	Source/Log.cpp
+	Source/Move.cpp
+	Source/Format.cpp
+	Source/Uci.cpp
 )
 
 target_include_directories(ChessEngineLib PUBLIC Source)

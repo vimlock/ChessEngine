@@ -1,5 +1,5 @@
-#include "Engine/Engine.h"
-#include "UCI/Uci.h"
+#include "Engine.h"
+#include "Uci.h"
 
 #include <iostream>
 

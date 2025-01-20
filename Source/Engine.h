@@ -1,6 +1,4 @@
-#ifndef __ENGINE_H__
-#define __ENGINE_H__
-
+#pragma once
 #include "Board.h"
 
 namespace vimlock
@@ -69,7 +67,7 @@ struct Node
 class Engine
 {
 public:
-	Engine(int maxDepth=5);
+	Engine(int maxDepth=4);
 
 	/// Set current board position.
 	void setPosition(const Board &board);
@@ -113,5 +111,3 @@ private:
 };
 
 } // namespace vimlock
-
-#endif // ___ENGINE_H__

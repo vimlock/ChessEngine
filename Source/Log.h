@@ -1,6 +1,4 @@
-#ifndef __LOG_H__
-#define __LOG_H__
-
+#pragma once
 #include <string>
 
 namespace vimlock
@@ -16,5 +14,3 @@ void logInfo(const std::string &msg, const Board &board, const Bitboard &bitboar
 void logError(const std::string &msg);
 
 } // namespace vimlock
-
-#endif // __LOG_H__

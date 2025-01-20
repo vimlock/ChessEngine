@@ -1,5 +1,3 @@
-#ifndef __SQUARE_INL__
-#define __SQUARE_INL__
 #pragma once
 
 #include "Square.h"
@@ -43,5 +41,3 @@ inline int Square::getRank() const
 }
 	
 } // namespace vimlock
-
-#endif // __SQUARE_INL__

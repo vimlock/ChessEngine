@@ -1,5 +1,3 @@
-#ifndef __BOARD_INL__
-#define __BOARD_INL__
 #pragma once
 
 #include "Board.h"
@@ -126,5 +124,3 @@ inline Bitboard Board::getPieces(Color color, Piece piece) const
 }
 
 } // namespace vimlock
-
-#endif // __BOARD_INL__

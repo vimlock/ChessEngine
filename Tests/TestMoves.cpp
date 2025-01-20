@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include "Engine/Moves.h"
-#include "Engine/Format.h"
+#include "Moves.h"
+#include "Format.h"
 
 using namespace vimlock;
 

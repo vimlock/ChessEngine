@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "Engine/Bitboard.h"
+#include "Bitboard.h"
 
 using namespace vimlock;
 
