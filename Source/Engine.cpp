@@ -2,6 +2,7 @@
 #include "Eval.h"
 #include "Move.h"
 #include "Moves.h"
+#include "Log.h"
 
 #include <cassert>
 #include <cstddef>
@@ -25,22 +26,21 @@ constexpr int KNIGHT_VALUE = 3000;
 constexpr int BISHOP_VALUE = 3000;
 constexpr int QUEEN_VALUE  = 9000;
 
+/// Maximum number of moves a player can choose from during a single turn.
+/// Theoretical maximum is 218 based on web search.
+constexpr int maxMoves = 256;
+
 Move Node::getMove() const
 {
 	return Move(src, dst, promote);
 }
 
-MoveList Node::getPath() const
+MoveList Node::getMoves() const
 {
 	MoveList ret;
 
-	const Node *it = this;
-	while (it->parent != nullptr) {
-		ret.push_back(it->getMove());
-		it = it->parent;
-	}
-
-	std::reverse(ret.begin(), ret.end());
+	for (int i = 0; i < movesCount; ++i)
+		ret.push_back(moves[i]);
 
 	return ret;
 }
@@ -77,19 +77,20 @@ bool Engine::poll(Evaluation &ret)
 
 	total = 0;
 
-	traverse(root);
+	// traverse(root);
+	traverse(root, std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
 
-	if (!root->bestChild) {
+	if (root->movesCount == 0) {
 		freeNode(root);
 		return false;
 	}
 
-	ret.best = root->bestChild->getMove();
-	ret.eval = root->bestChild->eval;
+	ret.best = root->moves[0];
+	ret.eval = root->eval;
 	ret.total = total;
 
-	for (Node *it = root->bestChild; it != nullptr; it = it->bestChild) {
-		ret.continuation.push_back(it->getMove());
+	for (int i = 0; i < root->movesCount; ++i) {
+		ret.continuation.push_back(root->moves[i]);
 	}
 
 	freeNode(root);
@@ -102,17 +103,26 @@ void Engine::stop()
 	// Nothing to do now as we're still single threaded
 }
 
-void Engine::traverse(Node *node)
+void Engine::traverse(Node *node, int alpha, int beta)
 {
 	if (node->depth >= maxDepth) {
 		evaluate(node);
+		// logInfo("terminal ("+std::to_string(node->depth)+") "+" eval ("+std::to_string(node->eval)+"): " + node->getMoves().toLan());
 		return;
 	}
 
 	Bitboard allPieces = node->allPieces;
 	Bitboard ownPieces = node->ownPieces;
 
+	// Generate possible moves from current position
+	
+	int possibleMovesCount = 0;
+	Move possibleMoves[256];
+	
 	for (uint64_t i = 0; i < 64; ++i) {
+
+		assert(possibleMovesCount < maxMoves && "more moves than theoretically possible?");
+
 		if (!(ownPieces & Bitboard(Square(i))))
 			continue;
 
@@ -130,22 +140,20 @@ void Engine::traverse(Node *node)
 			if (!(moves & dstBitboard))
 				continue;
 
-			if (node->childCount >= Node::maxChildren)
-				break;
-
 			Square srcSquare = Square(i);
 			Square dstSquare = Square(k);
 
 			if (square.getPiece() == PAWN && (dstBitboard & (topAndBottomRanks))) {
 				// Add possible promotions
-				addChildNode(node, srcSquare, dstSquare, ROOK);
-				addChildNode(node, srcSquare, dstSquare, KNIGHT);
-				addChildNode(node, srcSquare, dstSquare, BISHOP);
-				addChildNode(node, srcSquare, dstSquare, QUEEN);
+				
+				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, ROOK);
+				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, KNIGHT);
+				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, BISHOP);
+				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare, QUEEN);
 			}
 			else {
 				// Regular move
-				addChildNode(node, srcSquare, dstSquare);
+				possibleMoves[possibleMovesCount++] = Move(srcSquare, dstSquare);
 
 				if (square.getPiece() == KING) {
 					// TODO: consider castling
@@ -154,80 +162,124 @@ void Engine::traverse(Node *node)
 		}
 	}
 
-	// In a terminal node? Due to a checkmate, or stalemate
-	if (node->childCount == 0) {
+	bool maximize = node->board.getCurrent() == board.getCurrent();
+	node->eval = maximize ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
 
+	Move bestMoves[32];
+	int bestMovesCount = 0;
+
+	int legalMoves = 0;
+
+	for (int i = 0; i < possibleMovesCount; ++i) {
+
+		Move move = possibleMoves[i];
+
+		Node *child = allocNode();
+		child->src = move.getSource();
+		child->dst = move.getDestination();
+		child->board = node->board;
+		child->promote = move.getPromotion();
+		child->depth = node->depth + 1;
+
+		std::copy(node->moves, node->moves + node->movesCount, child->moves);
+		child->movesCount = node->movesCount;
+		child->moves[child->movesCount++] = child->getMove();
+
+		if (!child->board.movePiece(child->src, child->dst, child->promote)) {
+			assert(false && "invalid move when traversing");
+		}
+
+		Bitboard allPieces = child->board.getPieces();
+		Bitboard ownPieces = child->board.getPieces(child->board.getCurrent());
+		Bitboard oppPieces = allPieces & ~ownPieces;
+		Bitboard ownKing = child->board.getPieces(child->board.getCurrent(), KING);
+		Bitboard oppAttacks = getAvailableCaptures(child->board, allPieces, oppPieces);
+
+		// Don't move into check
+		if (oppAttacks & ownKing) {
+			freeNode(child);
+			continue;
+		}
+
+		legalMoves++;
+
+		// Flipped around as the turn changed
+		child->allPieces = allPieces;
+		child->ownPieces = oppPieces;
+		child->oppPieces = ownPieces;
+
+		child->board.flipCurrent();
+
+		traverse(child, alpha, beta);
+
+		// logInfo("depth ("+std::to_string(node->depth)+") "+node->getMove().toLan()+" consider " + child->getMove().toLan() + " eval=" + std::to_string(child->eval));
+
+		if (maximize) {
+			if (child->eval > node->eval) {
+
+				node->eval = child->eval;
+
+				std::copy(child->moves, child->moves + child->movesCount, bestMoves);
+				bestMovesCount = child->movesCount;
+
+				// logInfo("Pick (max) " + cur + " over " + old);
+
+				// logInfo("depth ("+std::to_string(node->depth)+") pick ("+std::to_string(node->movesCount)+"): " + node->getMoves().toLan());
+			}
+			if (child->eval > alpha) {
+				alpha = child->eval;
+			}
+		}
+		else {
+			if (child->eval < node->eval) {
+				node->eval = child->eval;
+
+				std::copy(child->moves, child->moves + child->movesCount, bestMoves);
+				bestMovesCount = child->movesCount;
+
+				// logInfo("Pick (min) " + cur + " over " + old);
+			}
+			if (child->eval < beta) {
+				beta = child->eval;
+			}
+		}
+
+		freeNode(child);
+
+		// Prune remaining branches
+		if (alpha >= beta) {
+			// logInfo("depth ("+std::to_string(node->depth)+") pruned " + std::to_string(possibleMovesCount - i) + "/" + std::to_string(possibleMovesCount));
+			break;
+		}
+	}
+
+	if (legalMoves == 0) {
 		Bitboard attackedSquares = getAvailableCaptures(node->board, node->allPieces, node->oppPieces);
 		Bitboard ownKing = node->board.getPieces(node->board.getCurrent(), KING);
 
 		// Stalemate?
 		if (!(ownKing & attackedSquares)) {
 			node->eval = 0;
+			// logInfo("depth ("+std::to_string(node->depth)+") stalemate " + node->getMoves().toLan());
 			return;
 		}
-
 		else if (board.getCurrent() == node->board.getCurrent()) {
 			// Opponent checkmated us, try to struggle until the end
 			node->eval = std::numeric_limits<int>::min() + node->depth;
+			// logInfo("depth ("+std::to_string(node->depth)+") checkmate (loss) " + node->getMoves().toLan());
 		}
 		else {
 			// Opponent got checkmated, prefer shorter checkmates
 			node->eval = std::numeric_limits<int>::max() - node->depth;
-		}
-		return;
-	}
-
-	for (int i = 0; i < node->childCount; ++i) {
-		traverse(node->children[i]);
-	}
-
-	minimax(node, board.getCurrent() == node->board.getCurrent());
-
-	// Free all but the best candidate
-	for (int i = 0; i < node->childCount; ++i) {
-		if (node->children[i] != node->bestChild) {
-			freeNode(node->children[i]);
+			// logInfo("depth ("+std::to_string(node->depth)+") checkmate (win) " + node->getMoves().toLan());
 		}
 	}
-	node->childCount = 0;
-}
-
-void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
-{
-	assert(src != dst);
-
-	Node *child = allocNode();
-	child->src = src;
-	child->dst = dst;
-	child->board = parent->board;
-	child->promote = promote;
-
-	if (!child->board.movePiece(child->src, child->dst, child->promote)) {
-		assert(false && "invalid move when traversing");
+	else {
+		std::copy(bestMoves, bestMoves + bestMovesCount, node->moves);
+		node->movesCount = bestMovesCount;
 	}
 
-	Bitboard allPieces = child->board.getPieces();
-	Bitboard ownPieces = child->board.getPieces(child->board.getCurrent());
-	Bitboard oppPieces = allPieces & ~ownPieces;
-	Bitboard ownKing = child->board.getPieces(child->board.getCurrent(), KING);
-	Bitboard oppAttacks = getAvailableCaptures(child->board, allPieces, oppPieces);
-
-	// Don't move into check
-	if (oppAttacks & ownKing) {
-		freeNode(child);
-		return;
-	}
-
-	child->board.flipCurrent();
-	child->depth = parent->depth + 1;
-	child->parent = parent;
-
-	// Flipped around as the turn changed
-	child->allPieces = allPieces;
-	child->ownPieces = oppPieces;
-	child->oppPieces = ownPieces;
-
-	parent->children[parent->childCount++] = child;
+	// logInfo("depth ("+std::to_string(node->depth)+") "+" eval ("+std::to_string(node->eval)+"): " + node->getMoves().toLan());
 }
 
 void Engine::evaluate(Node *node)
@@ -238,37 +290,6 @@ void Engine::evaluate(Node *node)
 	node->eval = own - opp;
 
 	total++;
-}
-
-void Engine::minimax(Node *node, bool maximizing) const
-{
-	int eval;
-	Node *best = nullptr;
-
-	if (maximizing) {
-		eval = std::numeric_limits<int>::min();
-		for (int i = 0; i < node->childCount; ++i) {
-			Node *child = node->children[i];
-			if (eval < child->eval) {
-				eval = child->eval;
-				best = child;
-			}
-		}
-	}
-	else {
-		eval = std::numeric_limits<int>::max();
-		for (int i = 0; i < node->childCount; ++i) {
-			Node *child = node->children[i];
-
-			if (eval > child->eval) {
-				eval = child->eval;
-				best = child;
-			}
-		}
-	}
-
-	node->bestChild = best;
-	node->eval = eval;
 }
 
 int Engine::getScore(const Board &board, Color color) const
@@ -338,25 +359,16 @@ Node * Engine::allocNode()
 {
 	Node *node = new Node();
 
-	node->parent = nullptr;
 	node->depth = 0;
+	node->movesCount = 0;
 	node->promote = PAWN;
 	node->eval = 0;
-	node->bestChild = nullptr;
-	node->childCount = 0;
 
 	return node;
 }
 
 void Engine::freeNode(Node *node)
 {
-	for (int i = 0; i < node->childCount; ++i) {
-		freeNode(node->children[i]);
-	}
-
-	if (node->bestChild != nullptr)
-		freeNode(node->bestChild);
-
 	delete node;
 }
 

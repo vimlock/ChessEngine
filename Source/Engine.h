@@ -25,13 +25,10 @@ struct Evaluation
 
 struct Node
 {
-	/// Theoretical maximum is 218 based on web search.
-	static const int maxChildren = 256;
-
 	Move getMove() const;
 
 	/// Return list of moves leading to this position
-	MoveList getPath() const;
+	MoveList getMoves() const;
 
 	/// Board state at this node
 	Board board;
@@ -51,23 +48,19 @@ struct Node
 	/// Evaluation depth at this node
 	int depth;
 
-	/// Expensive to calculate to do it once and cache the result here.
+	/// Expensive to calculate, do it once and cache the result here.
 	Bitboard allPieces;
 	Bitboard ownPieces;
 	Bitboard oppPieces;
 
-	Node *parent;
-
-	Node *bestChild;
-
-	int childCount;
-	Node *children[maxChildren];
+	int movesCount;
+	Move moves[256];
 };
 
 class Engine
 {
 public:
-	Engine(int maxDepth=4);
+	Engine(int maxDepth=5);
 
 	/// Set current board position.
 	void setPosition(const Board &board);
@@ -86,14 +79,10 @@ public:
 	void stop();
 
 private:
-	void traverse(Node *node);
-
-	void addChildNode(Node *parent, Square src, Square dst, Piece promote=PAWN);
+	void traverse(Node *node, int alpha, int beta);
 
 	/// Evaluate current nodes position, taking into account piece value, king safety, etc.
 	void evaluate(Node *node);
-
-	void minimax(Node *node, bool maximizing) const;
 
 	int getScore(const Board &board, Color color) const;
 

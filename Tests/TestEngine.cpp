@@ -6,6 +6,9 @@ using namespace vimlock;
 
 MoveList bestMoves(const Board &board, size_t maxCount, int depth=2)
 {
+	UNSCOPED_INFO("depth=" << depth);
+	UNSCOPED_INFO(""<<toString(board));
+
 	Engine engine{depth};
 	engine.setPosition(board);
 
@@ -26,6 +29,7 @@ TEST_CASE("Stalemate")
 		board.setSquare(B1, WHITE, KING);
 		board.setSquare(B2, BLACK, PAWN);
 		board.setSquare(B3, BLACK, KING);
+
 		REQUIRE(bestMoves(board, 3, 3) == MoveList{});
 	}
 }
@@ -33,13 +37,14 @@ TEST_CASE("Stalemate")
 TEST_CASE("Find a mate in one")
 {
 	Board board;
+	int depth = GENERATE(3, 4, 5);
 
 	SECTION("King+Queen vs. King") {
 		board.setSquare(A1, BLACK, KING);
 		board.setSquare(C3, WHITE, KING);
 		board.setSquare(H2, WHITE, QUEEN);
 
-		REQUIRE(bestMoves(board, 3, 2) == MoveList{{H2, B2}});
+		REQUIRE(bestMoves(board, 3, depth) == MoveList{{H2, B2}});
 	}
 }
 
@@ -47,8 +52,10 @@ TEST_CASE("Find a mate in two")
 {
 	Board board;
 
+	int depth = GENERATE(3, 4, 5);
+
 	SECTION("King+Queen vs. King") {
-		board.setSquare(B1, WHITE, KING);
+		// board.setSquare(B1, WHITE, KING);
 		board.setSquare(E1, WHITE, ROOK);
 		board.setSquare(E2, WHITE, ROOK);
 
@@ -59,9 +66,7 @@ TEST_CASE("Find a mate in two")
 		board.setSquare(G7, BLACK, PAWN);
 		board.setSquare(F7, BLACK, PAWN);
 
-		INFO(""<<toString(board));
-
-		REQUIRE(bestMoves(board, 4, 4) == MoveList{{E2,E8}, {A8,E8}, {E1, E8 }});
+		REQUIRE(bestMoves(board, 4, depth) == MoveList{{E2,E8}, {A8,E8}, {E1, E8 }});
 	}
 }
 
@@ -69,11 +74,13 @@ TEST_CASE("Promote optimally")
 {
 	Board board;
 
+	int depth = GENERATE(3, 4, 5);
+
 	SECTION("Queen is best") {
 		board.setSquare(H7, WHITE, PAWN);
 		board.setSquare(A7, BLACK, KING);
 		board.setSquare(A1, WHITE, KING);
 
-		REQUIRE(bestMoves(board, 1) == MoveList{ {H7, H8, QUEEN}});
+		REQUIRE(bestMoves(board, 1, depth) == MoveList{ {H7, H8, QUEEN}});
 	}
 }
