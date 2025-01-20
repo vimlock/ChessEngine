@@ -14,6 +14,7 @@ namespace vimlock
 
 class Bitboard;
 class Board;
+class Move;
 
 /// Rendered view of the board state.
 class BoardTerminalFormatter
@@ -42,6 +43,7 @@ std::ostream & operator << (std::ostream &os, Square const &val);
 std::ostream & operator << (std::ostream &os, Piece const &val);
 std::ostream & operator << (std::ostream &os, Color const &val);
 std::ostream & operator << (std::ostream &os, Bitboard const &val);
+std::ostream & operator << (std::ostream &os, Move const &val);
 
 } // namespace vimlock
 

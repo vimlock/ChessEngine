@@ -46,6 +46,8 @@ private:
 class MoveList : public std::vector<Move>
 {
 public:
+	using std::vector<Move>::vector;
+
 	/// Return string representing this move list in long algebraic notation, e.g. "e2e4 e7e5 f2f5"
 	std::string toLan();
 };

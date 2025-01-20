@@ -23,7 +23,7 @@ public:
 
 	static Logger & instance()
 	{
-		static Logger singleton("log.txt");
+		static Logger singleton;
 		return singleton;
 	}
 

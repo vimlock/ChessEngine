@@ -165,4 +165,9 @@ std::ostream & operator << (std::ostream &os, Bitboard const &val)
 	return os << toString(val);
 }
 
+std::ostream & operator << (std::ostream &os, Move const &val)
+{
+	return os << val.toLan();
+}
+
 } // namespace vimlock

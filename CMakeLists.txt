@@ -39,6 +39,7 @@ add_executable(RunTests
 	Tests/Main.cpp
 	Tests/TestBoard.cpp
 	Tests/TestBitboard.cpp
+	Tests/TestEngine.cpp
 	Tests/TestEval.cpp
 	Tests/TestMove.cpp
 	Tests/TestMoves.cpp

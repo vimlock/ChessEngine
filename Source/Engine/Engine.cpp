@@ -2,6 +2,7 @@
 #include "Eval.h"
 #include "Move.h"
 #include "Moves.h"
+#include "Format.h"
 #include "Log.h"
 
 #include <cassert>
@@ -32,7 +33,7 @@ MoveList Node::getPath() const
 
 	const Node *it = this;
 	while (it->parent != nullptr) {
-		ret.push_back(getMove());
+		ret.push_back(it->getMove());
 		it = it->parent;
 	}
 
@@ -153,7 +154,24 @@ void Engine::traverse(Node *node)
 
 	// In a terminal node? Due to a checkmate, or stalemate
 	if (node->childCount == 0) {
-		evaluate(node);
+
+		Bitboard attackedSquares = getAvailableCaptures(node->board, node->allPieces, node->oppPieces);
+		Bitboard ownKing = node->board.getPieces(node->board.getCurrent(), KING);
+
+		// Stalemate?
+		if (!(ownKing & attackedSquares)) {
+			node->eval = 0;
+			return;
+		}
+
+		else if (board.getCurrent() == node->board.getCurrent()) {
+			// Opponent checkmated us, try to struggle until the end
+			node->eval = std::numeric_limits<int>::min() + node->depth;
+		}
+		else {
+			// Opponent got checkmated, prefer shorter checkmates
+			node->eval = std::numeric_limits<int>::max() - node->depth;
+		}
 		return;
 	}
 
@@ -174,6 +192,8 @@ void Engine::traverse(Node *node)
 
 void Engine::addChildNode(Node *parent, Square src, Square dst, Piece promote)
 {
+	assert(src != dst);
+
 	Node *child = allocNode();
 	child->src = src;
 	child->dst = dst;
@@ -218,8 +238,7 @@ void Engine::evaluate(Node *node)
 #if 0
 	logInfo("eval " + node->getPath().toLan() + " " +
 			std::to_string(own) + " - " + std::to_string(opp) +
-			" = " + std::to_string(node->eval),
-		node->board
+			" = " + std::to_string(node->eval)
 	);
 #endif
 
