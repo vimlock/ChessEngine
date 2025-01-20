@@ -1,5 +1,4 @@
 #include "Engine.h"
-#include "Eval.h"
 #include "Move.h"
 #include "Moves.h"
 
@@ -72,7 +71,7 @@ bool Engine::poll(Evaluation &ret)
 	root->board = board;
 	root->allPieces = root->board.getPieces();
 	root->ownPieces = root->board.getPieces(root->board.getCurrent());
-	root->oppPieces = root->board.getPieces(BoardUtils::getOpponent(root->board.getCurrent()));
+	root->oppPieces = root->board.getPieces(flipColor(root->board.getCurrent()));
 
 	total = 0;
 
@@ -280,7 +279,7 @@ void Engine::traverse(Node *node, int alpha, int beta)
 void Engine::evaluate(Node *node)
 {
 	int own = getScore(node->board, board.getCurrent());
-	int opp = getScore(node->board, BoardUtils::getOpponent(board.getCurrent()));
+	int opp = getScore(node->board, flipColor(board.getCurrent()));
 
 	node->eval = own - opp;
 
@@ -289,7 +288,17 @@ void Engine::evaluate(Node *node)
 
 int Engine::getScore(const Board &board, Color color) const
 {
-	MoveEval eval(board, color);
+	Color ownColor = color;
+	Color oppColor = flipColor(ownColor);
+
+	Bitboard ownPieces = board.getPieces(ownColor);
+	Bitboard oppPieces = board.getPieces(oppColor);
+	Bitboard allPieces = ownPieces | oppPieces;
+
+	Bitboard ownKing = board.getPieces(color, KING);
+
+	Bitboard attackedSquares = getAvailableCaptures(board, allPieces, oppPieces);
+	Bitboard attackingSquares = getAvailableCaptures(board, allPieces, ownPieces);
 
 	int ret = 0;
 
@@ -303,34 +312,35 @@ int Engine::getScore(const Board &board, Color color) const
 		ret += getPieceValue(square.getPiece());
 	}
 
-	if (eval.isInCheck()) {
+	// Getting checked is bad.
+	if (attackedSquares & ownKing) {
 		ret -= 500;
 	}
 
-	// Piece mobility is good.
-	ret += eval.getOwnAllAvailableMoves().count() * 100;
+	// Holding control of more squares is good.
+	ret += (attackingSquares).count() * 10;
 
-	// Even better if we're actually targetting something.
-	ret += (eval.getOppPieces() & eval.getAttackingSquares()).count() * 100;
+	// Threathening opponent is good.
+	ret += (oppPieces & attackingSquares).count() * 100;
 
-	// Holding center is good
-	ret += (centerSquares & eval.getAttackingSquares()).count() * 100;
-	ret += (centerSquares & eval.getOwnPieces()).count() * 100;
+	// Holding center is good.
+	ret += (centerSquares & attackingSquares).count() * 50;
+	ret += (centerSquares & ownPieces).count() * 50;
 
-	// Doubled pawns are bad
+	// Doubled pawns are bad.
 	for (int i = FILE_A; i <= FILE_H; ++i) {
-		if ((eval.getOwnPieces() & Bitboard::file(i)).count() > 1) {
+		if ((ownPieces & Bitboard::file(i)).count() > 1) {
 			ret -= 100;
 		}
 	}
 
-	// Shielded king is good
-	Square king = eval.getOwnKing().findFirstSquare();
-	int guards = (eval.getOwnPieces() & Bitboard::adjacent(king)).count();
+	// Guarded king is good
+	Square king = ownKing.findFirstSquare();
+	int guards = (ownPieces & Bitboard::adjacent(king)).count();
 	if (guards > 2)
-		ret += 200;
-	else if (guards == 1)
 		ret += 100;
+	else if (guards == 1)
+		ret += 50;
 
 	return ret;
 }

@@ -20,7 +20,6 @@ add_compile_options(
 add_library(ChessEngineLib STATIC
 	Source/Board.cpp
 	Source/Engine.cpp
-	Source/Eval.cpp
 	Source/Log.cpp
 	Source/Move.cpp
 	Source/Format.cpp
@@ -40,7 +39,6 @@ add_executable(RunTests
 	Tests/TestBoard.cpp
 	Tests/TestBitboard.cpp
 	Tests/TestEngine.cpp
-	Tests/TestEval.cpp
 	Tests/TestMove.cpp
 	Tests/TestMoves.cpp
 )

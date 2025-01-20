@@ -1,6 +1,5 @@
 #include "Board.h"
 #include "Moves.h"
-#include "Eval.h"
 #include "Format.h"
 #include "Log.h"
 
@@ -83,7 +82,7 @@ void Board::setStandardPosition()
 
 void Board::flipCurrent()
 {
-	setCurrent(BoardUtils::getOpponent(current));
+	setCurrent(flipColor(current));
 }
 
 bool Board::applyMoves(const MoveList &moves)

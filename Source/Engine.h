@@ -48,10 +48,17 @@ struct Node
 	/// Evaluation depth at this node
 	int depth;
 
-	/// Expensive to calculate, do it once and cache the result here.
+	/// Squares occupied by any piece.
 	Bitboard allPieces;
+
+	/// Squares occupied by own pieces.
 	Bitboard ownPieces;
+
+	/// Squares occupied by opponent pieces.
 	Bitboard oppPieces;
+
+	/// Bitmask of our own king.
+	Bitboard ownKing;
 
 	int movesCount;
 	Move moves[256];

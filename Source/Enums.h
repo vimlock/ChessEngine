@@ -75,5 +75,10 @@ enum Rank
 	RANK_8
 };
 
+/// Return color of the opposing player.
+inline Color flipColor(Color c)
+{
+	return c == WHITE ? BLACK : WHITE;
+}
 
 } // namespace vimlock
